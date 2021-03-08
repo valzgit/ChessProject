@@ -30,6 +30,7 @@ class GameState:
         self.allowed_pinned = []  # slucajevi ukoliko 'pinovane' figure mogu da pojedu figuru koja preti
         self.moveFunctions = {"P": self.getPawnMoves, "R": self.getRookMoves, "N": self.getKnightMoves,
                               "B": self.getBishopMoves, "Q": self.getQueenMoves, "K": self.getKingMoves}
+        self.check_path_to_king = []
         self.white_king = (0, 4)
         self.black_king = (7, 4)
         self.king_check = False
@@ -103,11 +104,13 @@ class GameState:
                 if self.board[r + one_offset][c - 1][0] == enemy:
                     moves.append(Move((r, c), (r + one_offset, c - 1), self.board))
                     if self.board[r + one_offset][c - 1][1] == "K":
+                        self.check_path_to_king.append((r, c))  # ako je piun napravio sah smem da pojedem piuna
                         self.king_check = True
             if c + 1 <= 7:
                 if self.board[r + one_offset][c + 1][0] == enemy:
                     moves.append(Move((r, c), (r + one_offset, c + 1), self.board))
                     if self.board[r + one_offset][c + 1][1] == "K":
+                        self.check_path_to_king.append((r, c))  # ako je piun napravio sah smem da pojedem piuna
                         self.king_check = True
 
         # dodaj promociju piuna posle
@@ -157,14 +160,18 @@ class GameState:
         pinning = False
         old_enemy_r = 0
         old_enemy_c = 0
+        check_road = []  # putic do kralja
+        made_check = False  # da li sam bas ja napravio sah
         for i in range(r + 1, 8):
             if self.board[i][c] == "--" and not pinning:
                 moves.append(Move((r, c), (i, c), self.board))
+                check_road.append((i, c))  # putic topa do potencijalnog kralja
             elif self.board[i][c][0] == enemy:
                 if not pinning:
                     moves.append(Move((r, c), (i, c), self.board))
                     if self.board[i][c][1] == "K":
                         self.king_check = True
+                        made_check = True
                         break
                     pinning = True
                     old_enemy_r = i
@@ -177,18 +184,25 @@ class GameState:
                         break
             elif not pinning:
                 break
-
+        if made_check:
+            for elem in check_road:
+                self.check_path_to_king.append(elem)
+            self.check_path_to_king.append((r, c))
         pinning = False
         old_enemy_r = 0
         old_enemy_c = 0
+        check_road = []  # putic do kralja
+        made_check = False  # da li sam bas ja napravio sah
         for i in range(r - 1, -1, -1):
             if self.board[i][c] == "--" and not pinning:
                 moves.append(Move((r, c), (i, c), self.board))
+                check_road.append((i, c))  # putic topa do potencijalnog kralja
             elif self.board[i][c][0] == enemy:
                 if not pinning:
                     moves.append(Move((r, c), (i, c), self.board))
                     if self.board[i][c][1] == "K":
                         self.king_check = True
+                        made_check = True
                         break
                     pinning = True
                     old_enemy_r = i
@@ -201,18 +215,25 @@ class GameState:
                         break
             else:
                 break
-
+        if made_check:
+            for elem in check_road:
+                self.check_path_to_king.append(elem)
+            self.check_path_to_king.append((r, c))
         pinning = False
         old_enemy_r = 0
         old_enemy_c = 0
+        check_road = []  # putic do kralja
+        made_check = False  # da li sam bas ja napravio sah
         for i in range(c + 1, 8):
             if self.board[r][i] == "--" and not pinning:
                 moves.append(Move((r, c), (r, i), self.board))
+                check_road.append((r, i))
             elif self.board[r][i][0] == enemy:
                 if not pinning:
                     moves.append(Move((r, c), (r, i), self.board))
                     if self.board[r][i][1] == "K":
                         self.king_check = True
+                        made_check = True
                         break
                     pinning = True
                     old_enemy_r = r
@@ -225,18 +246,25 @@ class GameState:
                         break
             elif not pinning:
                 break
-
+        if made_check:
+            for elem in check_road:
+                self.check_path_to_king.append(elem)
+            self.check_path_to_king.append((r, c))
         pinning = False
         old_enemy_r = 0
         old_enemy_c = 0
+        check_road = []  # putic do kralja
+        made_check = False  # da li sam bas ja napravio sah
         for i in range(c - 1, -1, -1):
             if self.board[r][i] == "--" and not pinning:
                 moves.append(Move((r, c), (r, i), self.board))
+                check_road.append((r, i))
             elif self.board[r][i][0] == enemy:
                 if not pinning:
                     moves.append(Move((r, c), (r, i), self.board))
                     if self.board[r][i][1] == "K":
                         self.king_check = True
+                        made_check = True
                         break
                     pinning = True
                     old_enemy_r = r
@@ -249,6 +277,10 @@ class GameState:
                         break
             elif not pinning:
                 break
+        if made_check:
+            for elem in check_road:
+                self.check_path_to_king.append(elem)
+            self.check_path_to_king.append((r, c))
 
     def getKnightMoves(self, r, c, moves):
         friend = "w"
@@ -259,34 +291,42 @@ class GameState:
         if r + 1 < 8 and c + 2 < 8 and self.board[r + 1][c + 2][0] != friend:
             moves.append(Move((r, c), (r + 1, c + 2), self.board))
             if self.board[r + 1][c + 2][1] == "K":
+                self.check_path_to_king.append((r, c))  # ako je konj napravio sah smem da pojedem piuna
                 self.king_check = True
         if r + 1 < 8 and c - 2 >= 0 and self.board[r + 1][c - 2][0] != friend:
             moves.append(Move((r, c), (r + 1, c - 2), self.board))
             if self.board[r + 1][c - 2][1] == "K":
+                self.check_path_to_king.append((r, c))  # ako je konj napravio sah smem da pojedem piuna
                 self.king_check = True
         if r - 1 >= 0 and c + 2 < 8 and self.board[r - 1][c + 2][0] != friend:
             moves.append(Move((r, c), (r - 1, c + 2), self.board))
             if self.board[r - 1][c + 2][1] == "K":
+                self.check_path_to_king.append((r, c))  # ako je konj napravio sah smem da pojedem piuna
                 self.king_check = True
         if r - 1 >= 0 and c - 2 >= 0 and self.board[r - 1][c - 2][0] != friend:
             moves.append(Move((r, c), (r - 1, c - 2), self.board))
             if self.board[r - 1][c - 2][1] == "K":
+                self.check_path_to_king.append((r, c))  # ako je konj napravio sah smem da pojedem piuna
                 self.king_check = True
         if r + 2 < 8 and c + 1 < 8 and self.board[r + 2][c + 1][0] != friend:
             moves.append(Move((r, c), (r + 2, c + 1), self.board))
             if self.board[r + 2][c + 1][1] == "K":
+                self.check_path_to_king.append((r, c))  # ako je konj napravio sah smem da pojedem piuna
                 self.king_check = True
         if r + 2 < 8 and c - 1 >= 0 and self.board[r + 2][c - 1][0] != friend:
             moves.append(Move((r, c), (r + 2, c - 1), self.board))
             if self.board[r + 2][c - 1][1] == "K":
+                self.check_path_to_king.append((r, c))  # ako je konj napravio sah smem da pojedem piuna
                 self.king_check = True
         if r - 2 >= 0 and c + 1 < 8 and self.board[r - 2][c + 1][0] != friend:
             moves.append(Move((r, c), (r - 2, c + 1), self.board))
             if self.board[r - 2][c + 1][1] == "K":
+                self.check_path_to_king.append((r, c))  # ako je konj napravio sah smem da pojedem piuna
                 self.king_check = True
         if r - 2 >= 0 and c - 1 >= 0 and self.board[r - 2][c - 1][0] != friend:
             moves.append(Move((r, c), (r - 2, c - 1), self.board))
             if self.board[r - 2][c - 1][1] == "K":
+                self.check_path_to_king.append((r, c))  # ako je konj napravio sah smem da pojedem piuna
                 self.king_check = True
 
     def getKingMoves(self, r, c, moves):
@@ -367,17 +407,21 @@ class GameState:
         pinning = False
         old_enemy_r = 0
         old_enemy_c = 0
+        check_road = []  # putic do kralja
+        made_check = False  # da li sam bas ja napravio sah
         for i in range(r + 1, 8):
             new_c = new_c + 1
             if new_c >= 8:
                 break
             if self.board[i][new_c] == "--" and not pinning:
                 moves.append(Move((r, c), (i, new_c), self.board))
+                check_road.append((i, new_c))
             elif self.board[i][new_c][0] == enemy:
                 if not pinning:
                     moves.append(Move((r, c), (i, new_c), self.board))
                     if self.board[i][new_c][1] == "K":
                         self.king_check = True
+                        made_check = True
                         break
                     old_enemy_c = new_c
                     old_enemy_r = i
@@ -390,22 +434,31 @@ class GameState:
                         break
             elif not pinning:
                 break
+        if made_check:
+            for elem in check_road:
+                self.check_path_to_king.append(elem)
+            self.check_path_to_king.append((r, c))
+
 
         new_c = c
         pinning = False
         old_enemy_r = 0
         old_enemy_c = 0
+        check_road = []  # putic do kralja
+        made_check = False  # da li sam bas ja napravio sah
         for i in range(r - 1, -1, -1):
             new_c = new_c - 1
             if new_c < 0:
                 break
             if self.board[i][new_c] == "--" and not pinning:
                 moves.append(Move((r, c), (i, new_c), self.board))
+                check_road.append((i, new_c))
             elif self.board[i][new_c][0] == enemy:
                 if not pinning:
                     moves.append(Move((r, c), (i, new_c), self.board))
                     if self.board[i][new_c][1] == "K":
                         self.king_check = True
+                        made_check = True
                         break
                     old_enemy_c = new_c
                     old_enemy_r = i
@@ -418,22 +471,30 @@ class GameState:
                         break
             elif not pinning:
                 break
+        if made_check:
+            for elem in check_road:
+                self.check_path_to_king.append(elem)
+            self.check_path_to_king.append((r, c))
 
         new_r = r
         pinning = False
         old_enemy_r = 0
         old_enemy_c = 0
+        check_road = []  # putic do kralja
+        made_check = False  # da li sam bas ja napravio sah
         for i in range(c + 1, 8):
             new_r = new_r - 1
             if new_r < 0:
                 break
             if self.board[new_r][i] == "--" and not pinning:
                 moves.append(Move((r, c), (new_r, i), self.board))
+                check_road.append((new_r, i))
             elif self.board[new_r][i][0] == enemy:
                 if not pinning:
                     moves.append(Move((r, c), (new_r, i), self.board))
                     if self.board[new_r][i][1] == "K":
                         self.king_check = True
+                        made_check = True
                         break
                     old_enemy_c = i
                     old_enemy_r = new_r
@@ -446,22 +507,30 @@ class GameState:
                         break
             elif not pinning:
                 break
+        if made_check:
+            for elem in check_road:
+                self.check_path_to_king.append(elem)
+            self.check_path_to_king.append((r, c))
 
         new_r = r
         pinning = False
         old_enemy_r = 0
         old_enemy_c = 0
+        check_road = []  # putic do kralja
+        made_check = False  # da li sam bas ja napravio sah
         for i in range(c - 1, -1, -1):
             new_r = new_r + 1
             if new_r >= 8:
                 break
             if self.board[new_r][i] == "--" and not pinning:
                 moves.append(Move((r, c), (new_r, i), self.board))
+                check_road.append((new_r, i))
             elif self.board[new_r][i][0] == enemy:
                 if not pinning:
                     moves.append(Move((r, c), (new_r, i), self.board))
                     if self.board[new_r][i][1] == "K":
                         self.king_check = True
+                        made_check = True
                         break
                     old_enemy_c = i
                     old_enemy_r = new_r
@@ -474,6 +543,10 @@ class GameState:
                         break
             elif not pinning:
                 break
+        if made_check:
+            for elem in check_road:
+                self.check_path_to_king.append(elem)
+            self.check_path_to_king.append((r, c))
 
 
 class Move:
