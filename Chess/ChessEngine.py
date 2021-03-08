@@ -26,7 +26,8 @@ class GameState:
             [0, 0, 0, 0, 0, 0, 0, 0],
         ]
 
-        self.pinned = []
+        self.pinned = []  # pozicije na kojima se nalaze figure koje su na putu izmedju figure koja jede i kralja
+        self.allowed_pinned = []  # slucajevi ukoliko 'pinovane' figure mogu da pojedu figuru koja preti
         self.moveFunctions = {"P": self.getPawnMoves, "R": self.getRookMoves, "N": self.getKnightMoves,
                               "B": self.getBishopMoves, "Q": self.getQueenMoves, "K": self.getKingMoves}
         self.white_king = (0, 4)
@@ -165,11 +166,13 @@ class GameState:
                     if self.board[i][c][1] == "K":
                         self.king_check = True
                         break
+                    pinning = True
                     old_enemy_r = i
                     old_enemy_c = c
                 else:
                     if self.board[i][c][1] == "K":
                         self.pinned.append((old_enemy_r, old_enemy_c))
+                        self.allowed_pinned.append(Move((old_enemy_r, old_enemy_c), (r, c), self.board))
                     else:
                         break
             elif not pinning:
@@ -187,11 +190,13 @@ class GameState:
                     if self.board[i][c][1] == "K":
                         self.king_check = True
                         break
+                    pinning = True
                     old_enemy_r = i
                     old_enemy_c = c
                 else:
                     if self.board[i][c][1] == "K":
                         self.pinned.append((old_enemy_r, old_enemy_c))
+                        self.allowed_pinned.append(Move((old_enemy_r, old_enemy_c), (r, c), self.board))
                     else:
                         break
             else:
@@ -209,11 +214,13 @@ class GameState:
                     if self.board[r][i][1] == "K":
                         self.king_check = True
                         break
+                    pinning = True
                     old_enemy_r = r
                     old_enemy_c = i
                 else:
                     if self.board[r][i][1] == "K":
                         self.pinned.append((old_enemy_r, old_enemy_c))
+                        self.allowed_pinned.append(Move((old_enemy_r, old_enemy_c), (r, c), self.board))
                     else:
                         break
             elif not pinning:
@@ -231,11 +238,13 @@ class GameState:
                     if self.board[r][i][1] == "K":
                         self.king_check = True
                         break
+                    pinning = True
                     old_enemy_r = r
                     old_enemy_c = i
                 else:
                     if self.board[r][i][1] == "K":
                         self.pinned.append((old_enemy_r, old_enemy_c))
+                        self.allowed_pinned.append(Move((old_enemy_r, old_enemy_c), (r, c), self.board))
                     else:
                         break
             elif not pinning:
@@ -376,6 +385,7 @@ class GameState:
                 else:
                     if self.board[i][new_c][1] == "K":
                         self.pinned.append((old_enemy_r, old_enemy_c))
+                        self.allowed_pinned.append(Move((old_enemy_r, old_enemy_c), (r, c), self.board))
                     else:
                         break
             elif not pinning:
@@ -403,6 +413,7 @@ class GameState:
                 else:
                     if self.board[i][new_c][1] == "K":
                         self.pinned.append((old_enemy_r, old_enemy_c))
+                        self.allowed_pinned.append(Move((old_enemy_r, old_enemy_c), (r, c), self.board))
                     else:
                         break
             elif not pinning:
@@ -430,6 +441,7 @@ class GameState:
                 else:
                     if self.board[new_r][i][1] == "K":
                         self.pinned.append((old_enemy_r, old_enemy_c))
+                        self.allowed_pinned.append(Move((old_enemy_r, old_enemy_c), (r, c), self.board))
                     else:
                         break
             elif not pinning:
@@ -457,6 +469,7 @@ class GameState:
                 else:
                     if self.board[new_r][i][1] == "K":
                         self.pinned.append((old_enemy_r, old_enemy_c))
+                        self.allowed_pinned.append(Move((old_enemy_r, old_enemy_c), (r, c), self.board))
                     else:
                         break
             elif not pinning:

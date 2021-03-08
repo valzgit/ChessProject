@@ -37,37 +37,40 @@ def main():
                 location = p.mouse.get_pos()
                 col = location[0] // SQ_SIZE
                 row = location[1] // SQ_SIZE
-                if (row, col) not in gs.pinned:
+                playing = "w"
+                if gs.whiteToMove:
                     playing = "w"
-                    if gs.whiteToMove:
-                        playing = "w"
-                    else:
-                        playing = "b"
-                    if square_selected == (row, col):  # da li je 2 puta kliknuo na isto polje
-                        square_selected = ()
-                        playerClicks = []
-                        possible_moves = []
-                    elif len(square_selected) != 0 and gs.board[row][col][0] == playing:
-                        square_selected = (row, col)
-                        playerClicks = [square_selected]
-                        possible_moves = []
-                    else:
-                        square_selected = (row, col)
-                        playerClicks.append(square_selected)
-                    if len(playerClicks) == 1:
-                        piece = gs.board[row][col][1]
-                        turn = gs.board[row][col][0]
-                        if (turn == "w" and gs.whiteToMove) or (turn == "b" and not gs.whiteToMove):
-                            gs.moveFunctions[piece](row, col, possible_moves)
-                    if len(playerClicks) == 2:
-                        possible_moves = []
-                        move = ChessEngine.Move(playerClicks[0], playerClicks[1], gs.board)
-                        if move in valid_moves:
-                            print(move.getChessNotation())
-                            gs.makeMove(move)
-                            move_made = True
-                        playerClicks = []
-                        square_selected = ()
+                else:
+                    playing = "b"
+                if square_selected == (row, col):  # da li je 2 puta kliknuo na isto polje
+                    square_selected = ()
+                    playerClicks = []
+                    possible_moves = []
+                elif len(square_selected) != 0 and gs.board[row][col][0] == playing:
+                    square_selected = (row, col)
+                    playerClicks = [square_selected]
+                    possible_moves = []
+                else:
+                    square_selected = (row, col)
+                    playerClicks.append(square_selected)
+                if len(playerClicks) == 1:
+                    turn = gs.board[row][col][0]
+                    if (turn == "w" and gs.whiteToMove) or (turn == "b" and not gs.whiteToMove):
+                        i = 0
+                        while i < len(valid_moves):
+                            if (valid_moves.__getitem__(i).start_row, valid_moves.__getitem__(i).start_column) == (
+                                    row, col):
+                                possible_moves.append(valid_moves.__getitem__(i))
+                            i = i + 1
+                if len(playerClicks) == 2:
+                    possible_moves = []
+                    move = ChessEngine.Move(playerClicks[0], playerClicks[1], gs.board)
+                    if move in valid_moves:
+                        print(move.getChessNotation())
+                        gs.makeMove(move)
+                        move_made = True
+                    playerClicks = []
+                    square_selected = ()
             elif e.type == p.KEYDOWN:
                 if e.key == p.K_z:  # undo kada stisnem z
                     gs.undoMove()
@@ -80,6 +83,18 @@ def main():
             gs.pinned = []
             old_valid_moves = valid_moves
             valid_moves, valid_enemy_moves = gs.getValidMoves()
+            i = 0
+            while i < len(valid_moves):
+                row = valid_moves.__getitem__(i).start_row
+                col = valid_moves.__getitem__(i).start_column
+                if valid_moves.__getitem__(
+                        i) not in gs.allowed_pinned:  # mozda postoji sansa ako 2 puta imam figuru u ovoj listi da moram da izbacim svako njeno pojaljivanje iz iste
+                    if (row, col) in gs.pinned:
+                        valid_moves.__delitem__(i)
+                        i = i - 1
+                if (row, col) == gs.white_king or (row, col) == gs.black_king:
+                    pass
+                i = i + 1
             move_made = False
             king_position = ()
             if gs.whiteToMove and gs.king_check:
