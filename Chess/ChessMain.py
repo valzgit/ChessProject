@@ -1,5 +1,7 @@
 import pygame as p
 import random as r
+from tkinter import *
+from tkinter import messagebox
 from Chess import ChessEngine
 
 WIDTH = HEIGHT = 512
@@ -10,12 +12,13 @@ IMAGES = {}
 
 
 def loadImages():
-    pieces = ["wP", "wR",  "wK", "wB", "wN", "wQ", "bP", "bR", "bK", "bB", "bN", "bQ"]
+    pieces = ["wP", "wR", "wK", "wB", "wN", "wQ", "bP", "bR", "bK", "bB", "bN", "bQ"]
     for piece in pieces:
         IMAGES[piece] = p.transform.scale(p.image.load("images/" + piece + ".png"), (SQ_SIZE, SQ_SIZE))
 
 
 def main():
+    Tk().wm_withdraw()
     SAH_MAT = False
     possible_moves = []
     king_position = ()
@@ -138,24 +141,58 @@ def main():
                         index = index + 1
                 i = i + 1
             new_valid_moves = []
-            print(gs.check_path_to_king)
-            if len(gs.check_path_to_king) > 0:
+            if len(gs.check_path_to_king) > 0 and gs.figures_checking_king==1:
                 index = 0
                 while index < len(valid_moves):
                     move = valid_moves.__getitem__(index)
                     row = move.end_row
                     col = move.end_column
-                    if (move.start_row,move.start_column) == gs.white_king or (move.start_row,move.start_column) == gs.black_king:
+                    if (move.start_row, move.start_column) == gs.white_king or (move.start_row, move.start_column) == gs.black_king:
                         new_valid_moves.append(move)
                     elif (row, col) in gs.check_path_to_king:
                         new_valid_moves.append(move)
                     index = index + 1
                 valid_moves = new_valid_moves
-            if len(valid_moves) == 0:
+            elif len(gs.check_path_to_king) > 0:
+                index = 0
+                while index < len(valid_moves):
+                    move = valid_moves.__getitem__(index)
+                    if (move.start_row, move.start_column) == gs.white_king or (move.start_row, move.start_column) == gs.black_king:
+                        new_valid_moves.append(move)
+                    index = index + 1
+                valid_moves = new_valid_moves
+# u ovom delu se obradjuje pat , sah mat i pitanje korisnika da li zeli da igra novu igru
+            if len(valid_moves) == 0 and gs.king_check:
                 print("SAH MAT")
                 SAH_MAT = True
+                drawGameState(screen, gs, possible_moves, king_position)
+                clock.tick(MAX_FPS)
+                p.display.flip()
+                running = messagebox.askretrycancel(title="Retry game?", message="Do you want to play again?")
+                if running:
+                    gs = ChessEngine.GameState()
+                    SAH_MAT = False
+                    valid_moves, valid_enemy_moves = gs.getValidMoves()
+                    move_made = False
+                    square_selected = ()
+                    playerClicks = []
+            elif len(valid_moves) == 0:
+                SAH_MAT = True
+                print("PAT")
+                drawGameState(screen, gs, possible_moves, king_position)
+                clock.tick(MAX_FPS)
+                p.display.flip()
+                running = messagebox.askretrycancel(title="Retry game?", message="Do you want to play again?")
+                if running:
+                    gs = ChessEngine.GameState()
+                    valid_moves, valid_enemy_moves = gs.getValidMoves()
+                    move_made = False
+                    SAH_MAT = False
+                    square_selected = ()
+                    playerClicks = []
 
             gs.check_path_to_king = []
+            gs.figures_checking_king = 0
             move_made = False
             king_position = ()
             if gs.whiteToMove and gs.king_check:
@@ -168,8 +205,12 @@ def main():
         clock.tick(MAX_FPS)
         p.display.flip()
 
-        #BOT PLAYING HERE
+        # BOT PLAYING HERE
         if not gs.whiteToMove and not SAH_MAT:
+            move = valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
+            gs.makeMove(move)
+            move_made = True
+        elif gs.whiteToMove and not SAH_MAT:
             move = valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
             gs.makeMove(move)
             move_made = True
