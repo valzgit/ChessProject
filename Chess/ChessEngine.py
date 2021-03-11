@@ -30,8 +30,12 @@ class GameState:
         self.allowed_pinned = []  # slucajevi ukoliko 'pinovane' figure mogu da pojedu figuru koja preti
         self.moveFunctions = {"P": self.getPawnMoves, "R": self.getRookMoves, "N": self.getKnightMoves,
                               "B": self.getBishopMoves, "Q": self.getQueenMoves, "K": self.getKingMoves}
+
         self.check_path_to_king = []
         self.check_through_king = []
+        self.potential_white_pawn_check = []
+        self.potential_black_pawn_check = []
+
         self.figures_checking_king = 0
         self.white_king = (0, 4)
         self.black_king = (7, 4)
@@ -83,21 +87,138 @@ class GameState:
                     piece = self.board[r][c][1]
                     self.moveFunctions[piece](r, c, enemy_moves)
                     self.whiteToMove = not self.whiteToMove
+        i = 0
+        King = self.white_king
+        next_to_king = []
+        if self.whiteToMove:
+            King = self.black_king
+        # polja do aktuelnog kralja
+        if King[0] > 0:
+            next_to_king.append((King[0] - 1, King[1]))
+            if King[1] > 0:
+                next_to_king.append((King[0] - 1, King[1] - 1))
+            if King[1] < 7:
+                next_to_king.append((King[0] - 1, King[1] + 1))
+        if King[0] < 7:
+            next_to_king.append((King[0] + 1, King[1]))
+            if King[1] < 7:
+                next_to_king.append((King[0] + 1, King[1] + 1))
+            if King[1] > 0:
+                next_to_king.append((King[0] + 1, King[1] - 1))
+        if King[1] > 0:
+            next_to_king.append((King[0], King[1] - 1))
+        if King[1] < 7:
+            next_to_king.append((King[0], King[1] + 1))
+
+        king_play_indexes = []
+        while i < len(moves):
+            move = moves.__getitem__(i)
+            row = move.start_row
+            col = move.start_column
+            if move not in self.allowed_pinned:  # mozda postoji sansa ako 2 puta imam figuru u ovoj listi da moram da izbacim svako njeno pojaljivanje iz iste
+                if (row, col) in self.pinned:
+                    moves.__delitem__(i)
+                    continue
+            if (row, col) == King:
+                king_play_indexes.append(i)
+            i = i + 1
+        i = 0
+        while i < len(enemy_moves):
+            move = enemy_moves.__getitem__(i)
+            row = move.start_row
+            col = move.start_column
+            if self.board[row][col][1] != "P" and (
+                    move.end_row, move.end_column) in next_to_king:  # moram piune da izbacim odavde
+                index = 0
+                while index < len(king_play_indexes):
+                    where = king_play_indexes.__getitem__(index)
+                    king_move = moves.__getitem__(where)
+                    if ((king_move.end_row, king_move.end_column) == (move.end_row, move.end_column)) or (
+                            (king_move.end_row, king_move.end_column) in self.check_through_king):
+                        moves.__delitem__(where)
+                        king_play_indexes.__delitem__(index)
+                        pom_brojac = index
+                        while pom_brojac < len(king_play_indexes):
+                            king_play_indexes[pom_brojac] = king_play_indexes[pom_brojac] - 1
+                            pom_brojac = pom_brojac + 1
+                        continue
+                    index = index + 1
+            i = i + 1
+        # zabrana da kralj kroci na put piuna
+        i = 0
+        if not self.whiteToMove:
+            while i < len(self.potential_white_pawn_check):
+                if self.potential_white_pawn_check.__getitem__(i) in next_to_king:
+                    index = 0
+                    while index < len(king_play_indexes):
+                        where = king_play_indexes.__getitem__(index)
+                        king_move = moves.__getitem__(where)
+                        if (king_move.end_row, king_move.end_column) == self.potential_white_pawn_check.__getitem__(i):
+                            moves.__delitem__(where)
+                            king_play_indexes.__delitem__(index)
+                            pom_brojac = index
+                            while pom_brojac < len(king_play_indexes):
+                                king_play_indexes[pom_brojac] = king_play_indexes[pom_brojac] - 1
+                                pom_brojac = pom_brojac + 1
+                            continue
+                        index = index + 1
+                i = i + 1
+        else:
+            while i < len(self.potential_black_pawn_check):
+                if self.potential_black_pawn_check.__getitem__(i) in next_to_king:
+                    index = 0
+                    while index < len(king_play_indexes):
+                        where = king_play_indexes.__getitem__(index)
+                        king_move = moves.__getitem__(where)
+                        if (king_move.end_row, king_move.end_column) == self.potential_black_pawn_check.__getitem__(i):
+                            moves.__delitem__(where)
+                            king_play_indexes.__delitem__(index)
+                            pom_brojac = index
+                            while pom_brojac < len(king_play_indexes):
+                                king_play_indexes[pom_brojac] = king_play_indexes[pom_brojac] - 1
+                                pom_brojac = pom_brojac + 1
+                            continue
+                        index = index + 1
+                i = i + 1
+
+        new_valid_moves = []
+        if len(self.check_path_to_king) > 0 and self.figures_checking_king == 1:
+            index = 0
+            while index < len(moves):
+                move = moves.__getitem__(index)
+                row = move.end_row
+                col = move.end_column
+                if (move.start_row, move.start_column) == self.white_king or (
+                        move.start_row, move.start_column) == self.black_king:
+                    new_valid_moves.append(move)
+                elif (row, col) in self.check_path_to_king:
+                    new_valid_moves.append(move)
+                index = index + 1
+            moves = new_valid_moves
+        elif len(self.check_path_to_king) > 0:
+            index = 0
+            while index < len(moves):
+                move = moves.__getitem__(index)
+                if (move.start_row, move.start_column) == self.white_king or (
+                        move.start_row, move.start_column) == self.black_king:
+                    new_valid_moves.append(move)
+                index = index + 1
+            moves = new_valid_moves
+
+        self.potential_white_pawn_check = []
+        self.potential_black_pawn_check = []
+        self.check_path_to_king = []
+        self.check_through_king = []
+        self.figures_checking_king = 0
         return moves, enemy_moves
 
     def getPawnMoves(self, r, c, moves):
-        one_offset = 0
-        two_offset = 0
-        start_row = 0
+        one_offset = -1
+        two_offset = -2
+        start_row = START_POSITION_WHITE_PAWN
         skip_check = 0
-        enemy = "w"
-        if self.whiteToMove:
-            one_offset = -1
-            two_offset = -2
-            start_row = START_POSITION_WHITE_PAWN
-            skip_check = 0
-            enemy = "b"
-        elif not self.whiteToMove:
+        enemy = "b"
+        if not self.whiteToMove:
             one_offset = 1
             two_offset = 2
             skip_check = 7
@@ -116,6 +237,11 @@ class GameState:
                         self.check_path_to_king.append((r, c))  # ako je piun napravio sah smem da pojedem piuna
                         self.figures_checking_king = self.figures_checking_king + 1
                         self.king_check = True
+                elif self.board[r + one_offset][c - 1][0] != enemy:
+                    if self.whiteToMove:
+                        self.potential_white_pawn_check.append((r + one_offset, c - 1))
+                    else:
+                        self.potential_black_pawn_check.append((r + one_offset, c - 1))
             if c + 1 <= 7:
                 if self.board[r + one_offset][c + 1][0] == enemy:
                     moves.append(Move((r, c), (r + one_offset, c + 1), self.board))
@@ -123,6 +249,11 @@ class GameState:
                         self.check_path_to_king.append((r, c))  # ako je piun napravio sah smem da pojedem piuna
                         self.figures_checking_king = self.figures_checking_king + 1
                         self.king_check = True
+                elif self.board[r + one_offset][c + 1][0] != enemy:
+                    if self.whiteToMove:
+                        self.potential_white_pawn_check.append((r + one_offset, c + 1))
+                    else:
+                        self.potential_black_pawn_check.append((r + one_offset, c + 1))
 
         # dodaj promociju piuna posle
 
@@ -183,6 +314,9 @@ class GameState:
                     if self.board[i][c][1] == "K":
                         self.king_check = True
                         made_check = True
+                        # gledam polje iza da bih znao gde kralj ne sme da bezi
+                        if i + 1 < 8:
+                            self.check_through_king.append((i + 1, c))
                         break
                     pinning = True
                     old_enemy_r = i
@@ -217,6 +351,8 @@ class GameState:
                     if self.board[i][c][1] == "K":
                         self.king_check = True
                         made_check = True
+                        if i - 1 >= 0:
+                            self.check_through_king.append((i - 1, c))
                         break
                     pinning = True
                     old_enemy_r = i
@@ -251,6 +387,8 @@ class GameState:
                     if self.board[r][i][1] == "K":
                         self.king_check = True
                         made_check = True
+                        if i + 1 < 8:
+                            self.check_through_king.append((r, i + 1))
                         break
                     pinning = True
                     old_enemy_r = r
@@ -285,6 +423,8 @@ class GameState:
                     if self.board[r][i][1] == "K":
                         self.king_check = True
                         made_check = True
+                        if i - 1 > 0:
+                            self.check_through_king.append((r, i - 1))
                         break
                     pinning = True
                     old_enemy_r = r
@@ -452,6 +592,8 @@ class GameState:
                     if self.board[i][new_c][1] == "K":
                         self.king_check = True
                         made_check = True
+                        if i + 1 < 8 and new_c + 1 < 8:
+                            self.check_through_king.append((i + 1, new_c + 1))
                         break
                     old_enemy_c = new_c
                     old_enemy_r = i
@@ -489,6 +631,8 @@ class GameState:
                     if self.board[i][new_c][1] == "K":
                         self.king_check = True
                         made_check = True
+                        if i - 1 >= 0 and new_c - 1 >= 0:
+                            self.check_through_king.append((i - 1, new_c - 1))
                         break
                     old_enemy_c = new_c
                     old_enemy_r = i
@@ -526,6 +670,8 @@ class GameState:
                     if self.board[new_r][i][1] == "K":
                         self.king_check = True
                         made_check = True
+                        if i + 1 < 8 and new_r - 1 >= 0:
+                            self.check_through_king.append((new_r - 1, i + 1))
                         break
                     old_enemy_c = i
                     old_enemy_r = new_r
@@ -563,6 +709,8 @@ class GameState:
                     if self.board[new_r][i][1] == "K":
                         self.king_check = True
                         made_check = True
+                        if i - 1 >= 0 and new_r + 1 < 8:
+                            self.check_through_king.append((new_r + 1, i - 1))
                         break
                     old_enemy_c = i
                     old_enemy_r = new_r

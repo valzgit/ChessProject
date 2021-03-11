@@ -1,7 +1,7 @@
 import pygame as p
 import random as r
-from tkinter import *
-from tkinter import messagebox
+#from tkinter import *
+#from tkinter import messagebox
 from Chess import ChessEngine
 
 WIDTH = HEIGHT = 512
@@ -18,7 +18,7 @@ def loadImages():
 
 
 def main():
-    Tk().wm_withdraw()
+    #Tk().wm_withdraw()
     SAH_MAT = False
     possible_moves = []
     king_position = ()
@@ -86,110 +86,36 @@ def main():
         if move_made:
             gs.pinned = []
             valid_moves, valid_enemy_moves = gs.getValidMoves()
-            i = 0
-            King = gs.white_king
-            next_to_king = []
-            if gs.whiteToMove:
-                King = gs.black_king
-            if King[0] > 0 and King[1] > 0:
-                next_to_king.append((King[0] - 1, King[1] - 1))
-            if King[0] < 7 and King[1] < 7:
-                next_to_king.append((King[0] + 1, King[1] + 1))
-            if King[0] > 0 and King[1] < 7:
-                next_to_king.append((King[0] - 1, King[1] + 1))
-            if King[0] < 7 and King[1] > 0:
-                next_to_king.append((King[0] + 1, King[1] - 1))
-            if King[0] > 0:
-                next_to_king.append((King[0] - 1, King[1]))
-            if King[0] < 7:
-                next_to_king.append((King[0] + 1, King[1]))
-            if King[1] > 0:
-                next_to_king.append((King[0], King[1] - 1))
-            if King[1] < 7:
-                next_to_king.append((King[0], King[1] + 1))
-            king_play_indexes = []
-            while i < len(valid_moves):
-                move = valid_moves.__getitem__(i)
-                row = move.start_row
-                col = move.start_column
-                if move not in gs.allowed_pinned:  # mozda postoji sansa ako 2 puta imam figuru u ovoj listi da moram da izbacim svako njeno pojaljivanje iz iste
-                    if (row, col) in gs.pinned:
-                        valid_moves.__delitem__(i)
-                        continue
-                if (row, col) == King:
-                    king_play_indexes.append(i)
-                i = i + 1
-            i = 0
-            while i < len(valid_enemy_moves):
-                move = valid_enemy_moves.__getitem__(i)
-                row = move.start_row
-                col = move.start_column
-                if gs.board[row][col][1] != "P" and (
-                        move.end_row, move.end_column) in next_to_king:  # moram piune da izbacim odavde
-                    index = 0
-                    while index < len(king_play_indexes):
-                        where = king_play_indexes.__getitem__(index)
-                        king_move = valid_moves.__getitem__(where)
-                        if (king_move.end_row, king_move.end_column) == (move.end_row, move.end_column):
-                            valid_moves.__delitem__(where)
-                            king_play_indexes.__delitem__(index)
-                            pom_brojac = index
-                            while pom_brojac < len(king_play_indexes):
-                                king_play_indexes[pom_brojac] = king_play_indexes[pom_brojac] - 1
-                                pom_brojac = pom_brojac + 1
-                            continue
-                        index = index + 1
-                i = i + 1
-            new_valid_moves = []
-            if len(gs.check_path_to_king) > 0 and gs.figures_checking_king==1:
-                index = 0
-                while index < len(valid_moves):
-                    move = valid_moves.__getitem__(index)
-                    row = move.end_row
-                    col = move.end_column
-                    if (move.start_row, move.start_column) == gs.white_king or (move.start_row, move.start_column) == gs.black_king:
-                        new_valid_moves.append(move)
-                    elif (row, col) in gs.check_path_to_king:
-                        new_valid_moves.append(move)
-                    index = index + 1
-                valid_moves = new_valid_moves
-            elif len(gs.check_path_to_king) > 0:
-                index = 0
-                while index < len(valid_moves):
-                    move = valid_moves.__getitem__(index)
-                    if (move.start_row, move.start_column) == gs.white_king or (move.start_row, move.start_column) == gs.black_king:
-                        new_valid_moves.append(move)
-                    index = index + 1
-                valid_moves = new_valid_moves
+
 # u ovom delu se obradjuje pat , sah mat i pitanje korisnika da li zeli da igra novu igru
             if len(valid_moves) == 0 and gs.king_check:
                 print("SAH MAT")
                 SAH_MAT = True
-                drawGameState(screen, gs, possible_moves, king_position)
-                clock.tick(MAX_FPS)
-                p.display.flip()
-                running = messagebox.askretrycancel(title="Retry game?", message="Do you want to play again?")
-                if running:
-                    gs = ChessEngine.GameState()
-                    SAH_MAT = False
-                    valid_moves, valid_enemy_moves = gs.getValidMoves()
-                    move_made = False
-                    square_selected = ()
-                    playerClicks = []
+                # drawGameState(screen, gs, possible_moves, king_position)
+                # clock.tick(MAX_FPS)
+                # p.display.flip()
+                # running = messagebox.askretrycancel(title="Retry game?", message="Do you want to play again?")
+                # if running:
+                #     gs = ChessEngine.GameState()
+                #     SAH_MAT = False
+                #     valid_moves, valid_enemy_moves = gs.getValidMoves()
+                #     move_made = False
+                #     square_selected = ()
+                #     playerClicks = []
             elif len(valid_moves) == 0:
                 SAH_MAT = True
                 print("PAT")
-                drawGameState(screen, gs, possible_moves, king_position)
-                clock.tick(MAX_FPS)
-                p.display.flip()
-                running = messagebox.askretrycancel(title="Retry game?", message="Do you want to play again?")
-                if running:
-                    gs = ChessEngine.GameState()
-                    valid_moves, valid_enemy_moves = gs.getValidMoves()
-                    move_made = False
-                    SAH_MAT = False
-                    square_selected = ()
-                    playerClicks = []
+                # drawGameState(screen, gs, possible_moves, king_position)
+                # clock.tick(MAX_FPS)
+                # p.display.flip()
+                # running = messagebox.askretrycancel(title="Retry game?", message="Do you want to play again?")
+                # if running:
+                #     gs = ChessEngine.GameState()
+                #     valid_moves, valid_enemy_moves = gs.getValidMoves()
+                #     move_made = False
+                #     SAH_MAT = False
+                #     square_selected = ()
+                #     playerClicks = []
 
             gs.check_path_to_king = []
             gs.figures_checking_king = 0
