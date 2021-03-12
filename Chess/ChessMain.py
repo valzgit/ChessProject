@@ -1,7 +1,5 @@
 import pygame as p
 import random as r
-#from tkinter import *
-#from tkinter import messagebox
 from Chess import ChessEngine
 
 WIDTH = HEIGHT = 512
@@ -18,7 +16,6 @@ def loadImages():
 
 
 def main():
-    #Tk().wm_withdraw()
     SAH_MAT = False
     possible_moves = []
     king_position = ()
@@ -84,62 +81,35 @@ def main():
                     move_made = True
 
         if move_made:
-            gs.pinned = []
             valid_moves, valid_enemy_moves = gs.getValidMoves()
 
-# u ovom delu se obradjuje pat , sah mat i pitanje korisnika da li zeli da igra novu igru
+            # u ovom delu se obradjuje pat , sah mat i pitanje korisnika da li zeli da igra novu igru
             if len(valid_moves) == 0 and gs.king_check:
                 print("SAH MAT")
                 SAH_MAT = True
-                # drawGameState(screen, gs, possible_moves, king_position)
-                # clock.tick(MAX_FPS)
-                # p.display.flip()
-                # running = messagebox.askretrycancel(title="Retry game?", message="Do you want to play again?")
-                # if running:
-                #     gs = ChessEngine.GameState()
-                #     SAH_MAT = False
-                #     valid_moves, valid_enemy_moves = gs.getValidMoves()
-                #     move_made = False
-                #     square_selected = ()
-                #     playerClicks = []
             elif len(valid_moves) == 0:
                 SAH_MAT = True
                 print("PAT")
-                # drawGameState(screen, gs, possible_moves, king_position)
-                # clock.tick(MAX_FPS)
-                # p.display.flip()
-                # running = messagebox.askretrycancel(title="Retry game?", message="Do you want to play again?")
-                # if running:
-                #     gs = ChessEngine.GameState()
-                #     valid_moves, valid_enemy_moves = gs.getValidMoves()
-                #     move_made = False
-                #     SAH_MAT = False
-                #     square_selected = ()
-                #     playerClicks = []
+            if gs.notEaten >= 50:
+                SAH_MAT = True
+                print("REMI")
 
-            gs.check_path_to_king = []
-            gs.figures_checking_king = 0
             move_made = False
-            king_position = ()
-            if gs.whiteToMove and gs.king_check:
-                king_position = gs.black_king
-            elif not gs.whiteToMove and gs.king_check:
-                king_position = gs.white_king
-            gs.king_check = False
+            king_position = gs.getKingPosition()
 
         drawGameState(screen, gs, possible_moves, king_position)
         clock.tick(MAX_FPS)
         p.display.flip()
 
         # BOT PLAYING HERE
-        if not gs.whiteToMove and not SAH_MAT:
-            move = valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
-            gs.makeMove(move)
-            move_made = True
-        elif gs.whiteToMove and not SAH_MAT:
-            move = valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
-            gs.makeMove(move)
-            move_made = True
+        # if not gs.whiteToMove and not SAH_MAT:
+        #     move = valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
+        #     gs.makeMove(move)
+        #     move_made = True
+        # elif gs.whiteToMove and not SAH_MAT:
+        #     move = valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
+        #     gs.makeMove(move)
+        #     move_made = True
 
 
 def drawBoard(screen):
