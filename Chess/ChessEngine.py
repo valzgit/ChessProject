@@ -87,15 +87,12 @@ class GameState:
                 self.board[7][5] = "wR"
                 self.board[7][7] = "--"
                 self.whiteKingMoved = True
-        self.moveLog.append(move)  # sacuvamo potez
-        self.whiteToMove = not self.whiteToMove
+
         if (move.start_row, move.start_column) == self.white_king:
             self.white_king = (move.end_row, move.end_column)
-            print("WK:" + str(self.white_king))
             self.whiteKingMoved = True
         elif (move.start_row, move.start_column) == self.black_king:
             self.black_king = (move.end_row, move.end_column)
-            print("bK:" + str(self.black_king))
             self.blackKingMoved = True
         if move.start_row == 0:
             if move.start_column == 0:
@@ -107,6 +104,8 @@ class GameState:
                 self.whiteRooksMoved[0] = True
             if move.start_column == 7:
                 self.whiteRooksMoved[1] = True
+        self.moveLog.append(move)  # sacuvamo potez
+        self.whiteToMove = not self.whiteToMove
 
     def undoMove(self):
         if len(self.moveLog) != 0:
@@ -185,13 +184,13 @@ class GameState:
             move = enemy_moves.__getitem__(i)
             row = move.start_row
             col = move.start_column
-            if self.rokadaPossible[0] and move.end_row == 0 and 0 <= move.end_column < 4:
+            if self.rokadaPossible[0] and move.end_row == 0 and 2 <= move.end_column < 4:
                 self.rokadaPossible[0] = False
-            if self.rokadaPossible[2] and move.end_row == 7 and 0 <= move.end_column < 4:
+            if self.rokadaPossible[2] and move.end_row == 7 and 2 <= move.end_column < 4:
                 self.rokadaPossible[2] = False
-            if self.rokadaPossible[1] and move.end_row == 0 and 5 <= move.end_column < 8:
+            if self.rokadaPossible[1] and move.end_row == 0 and 5 <= move.end_column < 7:
                 self.rokadaPossible[1] = False
-            if self.rokadaPossible[3] and move.end_row == 7 and 5 <= move.end_column < 8:
+            if self.rokadaPossible[3] and move.end_row == 7 and 5 <= move.end_column < 7:
                 self.rokadaPossible[3] = False
 
             if self.board[row][col][1] != "P" and (
@@ -326,11 +325,12 @@ class GameState:
 
     def getKingPosition(self):
         king_position = ()
-        if self.whiteToMove and self.king_check:
-            king_position = self.white_king
-        elif not self.whiteToMove and self.king_check:
-            king_position = self.black_king
-        self.king_check = False
+        if self.king_check:
+            if self.whiteToMove:
+                king_position = self.white_king
+            else:
+                king_position = self.black_king
+            self.king_check = False
         return king_position
 
     def getPawnMoves(self, r, c, moves):
@@ -603,6 +603,11 @@ class GameState:
                 moves.append(Move((r, c), (i, c), self.board))
             elif self.board[i][c][0] == enemy:
                 moves.append(Move((r, c), (i, c), self.board))
+            else:
+                if self.whiteToMove:
+                    self.whiteProtects.append((i, c))
+                else:
+                    self.blackProtects.append((i, c))
             break
 
         for i in range(r - 1, -1, -1):
@@ -610,6 +615,11 @@ class GameState:
                 moves.append(Move((r, c), (i, c), self.board))
             elif self.board[i][c][0] == enemy:
                 moves.append(Move((r, c), (i, c), self.board))
+            else:
+                if self.whiteToMove:
+                    self.whiteProtects.append((i, c))
+                else:
+                    self.blackProtects.append((i, c))
             break
 
         for i in range(c + 1, 8):
@@ -617,6 +627,11 @@ class GameState:
                 moves.append(Move((r, c), (r, i), self.board))
             elif self.board[r][i][0] == enemy:
                 moves.append(Move((r, c), (r, i), self.board))
+            else:
+                if self.whiteToMove:
+                    self.whiteProtects.append((r, i))
+                else:
+                    self.blackProtects.append((r, i))
             break
 
         for i in range(c - 1, -1, -1):
@@ -624,6 +639,11 @@ class GameState:
                 moves.append(Move((r, c), (r, i), self.board))
             elif self.board[r][i][0] == enemy:
                 moves.append(Move((r, c), (r, i), self.board))
+            else:
+                if self.whiteToMove:
+                    self.whiteProtects.append((r, i))
+                else:
+                    self.blackProtects.append((r, i))
             break
 
     def getKingBishopMoves(self, r, c, moves):
@@ -644,6 +664,11 @@ class GameState:
                 moves.append(Move((r, c), (i, new_c), self.board))
                 if self.board[i][new_c][1] == "K":
                     self.king_check = True
+            else:
+                if self.whiteToMove:
+                    self.whiteProtects.append((i, new_c))
+                else:
+                    self.blackProtects.append((i, new_c))
             break
 
         new_c = c
@@ -657,6 +682,11 @@ class GameState:
                 moves.append(Move((r, c), (i, new_c), self.board))
                 if self.board[i][new_c][1] == "K":
                     self.king_check = True
+            else:
+                if self.whiteToMove:
+                    self.whiteProtects.append((i, new_c))
+                else:
+                    self.blackProtects.append((i, new_c))
             break
 
         new_r = r
@@ -670,6 +700,11 @@ class GameState:
                 moves.append(Move((r, c), (new_r, i), self.board))
                 if self.board[new_r][i][1] == "K":
                     self.king_check = True
+            else:
+                if self.whiteToMove:
+                    self.whiteProtects.append((new_r, i))
+                else:
+                    self.blackProtects.append((new_r, i))
             break
 
         new_r = r
@@ -683,6 +718,11 @@ class GameState:
                 moves.append(Move((r, c), (new_r, i), self.board))
                 if self.board[new_r][i][1] == "K":
                     self.king_check = True
+            else:
+                if self.whiteToMove:
+                    self.whiteProtects.append((new_r, i))
+                else:
+                    self.blackProtects.append((new_r, i))
             break
 
     def getQueenMoves(self, r, c, moves):
