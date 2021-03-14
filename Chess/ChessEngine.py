@@ -37,11 +37,17 @@ class GameState:
         self.potential_black_pawn_check = []
         self.whiteProtects = []
         self.blackProtects = []
+        self.rokadaPossible = [False, False, False, False]  # BK-LBR, BK-RBR, WK-LWR, WK-RWR
         self.notEaten = 0
 
         self.figures_checking_king = 0
-        self.white_king = (0, 4)
-        self.black_king = (7, 4)
+        self.white_king = (7, 4)
+        self.black_king = (0, 4)
+        self.whiteKingMoved = False
+        self.blackKingMoved = False
+        self.whiteRooksMoved = [False, False]
+        self.blackRooksMoved = [False, False]
+
         self.king_check = False
         self.values = {"P": 1, "R": 5, "N": 3, "B": 3, "Q": 9, "K": 100}
         self.multiplicator = {"b": -1, "w": 1}
@@ -63,12 +69,44 @@ class GameState:
             self.notEaten += 1
 
         self.board[move.end_row][move.end_column] = move.piece_moved
+
+        if move.rokada:
+            if (move.end_row, move.end_column) == (0, 2):
+                self.board[0][3] = "bR"
+                self.board[0][0] = "--"
+                self.blackKingMoved = True
+            elif (move.end_row, move.end_column) == (0, 6):
+                self.board[0][5] = "bR"
+                self.board[0][7] = "--"
+                self.blackKingMoved = True
+            elif (move.end_row, move.end_column) == (7, 2):
+                self.board[7][3] = "wR"
+                self.board[7][0] = "--"
+                self.whiteKingMoved = True
+            elif (move.end_row, move.end_column) == (7, 6):
+                self.board[7][5] = "wR"
+                self.board[7][7] = "--"
+                self.whiteKingMoved = True
         self.moveLog.append(move)  # sacuvamo potez
         self.whiteToMove = not self.whiteToMove
         if (move.start_row, move.start_column) == self.white_king:
             self.white_king = (move.end_row, move.end_column)
+            print("WK:" + str(self.white_king))
+            self.whiteKingMoved = True
         elif (move.start_row, move.start_column) == self.black_king:
             self.black_king = (move.end_row, move.end_column)
+            print("bK:" + str(self.black_king))
+            self.blackKingMoved = True
+        if move.start_row == 0:
+            if move.start_column == 0:
+                self.blackRooksMoved[0] = True
+            if move.start_column == 7:
+                self.blackRooksMoved[1] = True
+        if move.start_row == 7:
+            if move.start_column == 0:
+                self.whiteRooksMoved[0] = True
+            if move.start_column == 7:
+                self.whiteRooksMoved[1] = True
 
     def undoMove(self):
         if len(self.moveLog) != 0:
@@ -98,7 +136,7 @@ class GameState:
                     self.whiteToMove = not self.whiteToMove
 
         King = self.white_king
-        if self.whiteToMove:
+        if not self.whiteToMove:
             King = self.black_king
         next_to_king = []  # polja do aktuelnog kralja
         if King[0] > 0:
@@ -134,12 +172,28 @@ class GameState:
                 king_play_indexes.append(i)
             i = i + 1
 
+        # ako je sah zabranim rokadu
+        if self.king_check:
+            self.rokadaPossible[0] = False
+            self.rokadaPossible[1] = False
+            self.rokadaPossible[2] = False
+            self.rokadaPossible[3] = False
+
         # kralj ne sme da se pomera tamo gde se krecu protivnicke figure (sem piuna za njih se gleda da li jedu)
         i = 0
         while i < len(enemy_moves):
             move = enemy_moves.__getitem__(i)
             row = move.start_row
             col = move.start_column
+            if self.rokadaPossible[0] and move.end_row == 0 and 0 <= move.end_column < 4:
+                self.rokadaPossible[0] = False
+            if self.rokadaPossible[2] and move.end_row == 7 and 0 <= move.end_column < 4:
+                self.rokadaPossible[2] = False
+            if self.rokadaPossible[1] and move.end_row == 0 and 5 <= move.end_column < 8:
+                self.rokadaPossible[1] = False
+            if self.rokadaPossible[3] and move.end_row == 7 and 5 <= move.end_column < 8:
+                self.rokadaPossible[3] = False
+
             if self.board[row][col][1] != "P" and (
                     move.end_row, move.end_column) in next_to_king:
                 index = 0
@@ -244,6 +298,18 @@ class GameState:
                 index = index + 1
             moves = new_valid_moves
 
+        # ako i dalje sme rokada dodam je u validne poteze
+        if self.whiteToMove:
+            if self.rokadaPossible[2]:
+                moves.append(Move(self.white_king, (7, 2), self.board, True))
+            if self.rokadaPossible[3]:
+                moves.append(Move(self.white_king, (7, 6), self.board, True))
+        else:
+            if self.rokadaPossible[0]:
+                moves.append(Move(self.black_king, (0, 2), self.board, True))
+            if self.rokadaPossible[1]:
+                moves.append(Move(self.black_king, (0, 6), self.board, True))
+
         # cistka svega
         self.potential_white_pawn_check = []
         self.potential_black_pawn_check = []
@@ -261,9 +327,9 @@ class GameState:
     def getKingPosition(self):
         king_position = ()
         if self.whiteToMove and self.king_check:
-            king_position = self.black_king
-        elif not self.whiteToMove and self.king_check:
             king_position = self.white_king
+        elif not self.whiteToMove and self.king_check:
+            king_position = self.black_king
         self.king_check = False
         return king_position
 
@@ -343,7 +409,7 @@ class GameState:
                     if self.board[i][c][1] == "K":
                         self.pinned.append((old_enemy_r, old_enemy_c))
                         self.allowed_pinned.append(Move((old_enemy_r, old_enemy_c), (r, c), self.board))
-                        for elem in check_road: # dozvoljeno je kretati se putanjom kojom dolazi potencijalni sah
+                        for elem in check_road:  # dozvoljeno je kretati se putanjom kojom dolazi potencijalni sah
                             self.allowed_pinned.append(Move((old_enemy_r, old_enemy_c), elem, self.board))
                     break
             elif not pinning:
@@ -515,8 +581,22 @@ class GameState:
         enemy = "w"
         if self.whiteToMove:
             enemy = "b"
+            # provera rokade
+            if not self.whiteKingMoved:
+                if not self.whiteRooksMoved[0] and self.board[7][1] == "--" and self.board[7][2] == "--" and \
+                        self.board[7][3] == "--":
+                    self.rokadaPossible[2] = True
+                if not self.whiteRooksMoved[1] and self.board[7][5] == "--" and self.board[7][6] == "--":
+                    self.rokadaPossible[3] = True
         elif not self.whiteToMove:
             enemy = "w"
+            # provera rokade
+            if not self.blackKingMoved:
+                if not self.blackRooksMoved[0] and self.board[0][1] == "--" and self.board[0][2] == "--" and \
+                        self.board[0][3] == "--":
+                    self.rokadaPossible[0] = True
+                if not self.blackRooksMoved[1] and self.board[0][5] == "--" and self.board[0][6] == "--":
+                    self.rokadaPossible[1] = True
 
         for i in range(r + 1, 8):
             if self.board[i][c] == "--":
@@ -797,17 +877,20 @@ class Move:
     files_to_cols = {"h": 7, "g": 6, "f": 5, "e": 4, "d": 3, "c": 2, "b": 1, "a": 0}
     cols_to_files = {v: k for k, v in files_to_cols.items()}
 
-    def __init__(self, start_square, end_square, board):  # konstruktor klase
+    def __init__(self, start_square, end_square, board, rokada=False):  # konstruktor klase
         self.start_row = start_square[0]
         self.start_column = start_square[1]
         self.end_row = end_square[0]
         self.end_column = end_square[1]
         self.piece_moved = board[self.start_row][self.start_column]
         self.piece_captured = board[self.end_row][self.end_column]
+        self.rokada = rokada
 
     def __eq__(self, other):
         if isinstance(other, Move):
-            return self.getChessNotation() == other.getChessNotation()
+            if self.getChessNotation() == other.getChessNotation():
+                other.rokada = self.rokada
+                return True
         return False
 
     def getChessNotation(self):

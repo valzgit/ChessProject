@@ -39,10 +39,9 @@ def main():
                 col = location[0] // SQ_SIZE
                 row = location[1] // SQ_SIZE
                 playing = "w"
-                if gs.whiteToMove:
-                    playing = "w"
-                else:
+                if not gs.whiteToMove:
                     playing = "b"
+
                 if square_selected == (row, col):  # da li je 2 puta kliknuo na isto polje
                     square_selected = ()
                     playerClicks = []
@@ -92,7 +91,7 @@ def main():
                 print("PAT")
             if gs.notEaten >= 50:
                 SAH_MAT = True
-                print("REMI")
+                print("REMI (50 poteza bez pomeranja piuna ili jedenja figura)")
 
             move_made = False
             king_position = gs.getKingPosition()
@@ -102,14 +101,14 @@ def main():
         p.display.flip()
 
         # BOT PLAYING HERE
-        # if not gs.whiteToMove and not SAH_MAT:
-        #     move = valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
-        #     gs.makeMove(move)
-        #     move_made = True
-        # elif gs.whiteToMove and not SAH_MAT:
-        #     move = valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
-        #     gs.makeMove(move)
-        #     move_made = True
+        if not gs.whiteToMove and not SAH_MAT:
+            move = valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
+            gs.makeMove(move)
+            move_made = True
+        elif gs.whiteToMove and not SAH_MAT: #ovde je suprotno pise whitetomove al igra crni
+            move = valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
+            gs.makeMove(move)
+            move_made = True
 
 
 def drawBoard(screen):
