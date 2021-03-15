@@ -105,10 +105,10 @@ def main():
             move = valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
             gs.makeMove(move)
             move_made = True
-        elif gs.whiteToMove and not SAH_MAT:  # ovde je suprotno pise whitetomove al igra crni
-            move = valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
-            gs.makeMove(move)
-            move_made = True
+        # elif gs.whiteToMove and not SAH_MAT:  # ovde je suprotno pise whitetomove al igra crni
+        #     move = valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
+        #     gs.makeMove(move)
+        #     move_made = True
 
 
 def drawBoard(screen):

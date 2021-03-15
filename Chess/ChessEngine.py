@@ -37,6 +37,7 @@ class GameState:
         self.potential_black_pawn_check = []
         self.whiteProtects = []
         self.blackProtects = []
+        self.enPassantLocation = [-1, -1]
         self.rokadaPossible = [False, False, False, False]  # BK-LBR, BK-RBR, WK-LWR, WK-RWR
         self.notEaten = 0
 
@@ -55,6 +56,8 @@ class GameState:
         self.moveLog = []
 
     def makeMove(self, move):
+        self.enPassantLocation[0] = -1
+        self.enPassantLocation[1] = -1
         self.board[move.start_row][move.start_column] = "--"
         if (move.piece_moved[1] == "P") and ((move.piece_moved[0] == "w" and move.end_row == 0) or (
                 move.piece_moved[0] == "b" and move.end_row == 7)):
@@ -62,6 +65,12 @@ class GameState:
                 move.piece_moved = "wQ"
             else:
                 move.piece_moved = "bQ"
+        if (move.piece_moved[1] == "P") and (move.end_row - move.start_row == 2 or move.end_row - move.start_row == -2):
+            self.enPassantLocation[1] = move.start_column
+            if move.end_row - move.start_row == 2:
+                self.enPassantLocation[0] = move.end_row - 1
+            else:
+                self.enPassantLocation[0] = move.end_row + 1
 
         if self.board[move.end_row][move.end_column] != "--" or move.piece_moved[1] == "P":
             self.notEaten = 0
@@ -69,6 +78,11 @@ class GameState:
             self.notEaten += 1
 
         self.board[move.end_row][move.end_column] = move.piece_moved
+        if move.enPassant:
+            if move.end_row == 2:
+                self.board[3][move.end_column] = "--"
+            else:
+                self.board[4][move.end_column] = "--"
 
         if move.rokada:
             if (move.end_row, move.end_column) == (0, 2):
@@ -345,7 +359,6 @@ class GameState:
             skip_check = 7
             start_row = START_POSITION_BLACK_PAWN
             enemy = "w"
-
         if r != skip_check:
             if self.board[r + one_offset][c] == "--":
                 moves.append(Move((r, c), (r + one_offset, c), self.board))
@@ -363,6 +376,8 @@ class GameState:
                         self.potential_white_pawn_check.append((r + one_offset, c - 1))
                     else:
                         self.potential_black_pawn_check.append((r + one_offset, c - 1))
+                if r + one_offset == self.enPassantLocation[0] and c - 1 == self.enPassantLocation[1]:
+                    moves.append(Move((r, c), (r + one_offset, c - 1), self.board, False, True))
             if c + 1 <= 7:
                 if self.board[r + one_offset][c + 1][0] == enemy:
                     moves.append(Move((r, c), (r + one_offset, c + 1), self.board))
@@ -375,6 +390,8 @@ class GameState:
                         self.potential_white_pawn_check.append((r + one_offset, c + 1))
                     else:
                         self.potential_black_pawn_check.append((r + one_offset, c + 1))
+                if r + one_offset == self.enPassantLocation[0] and c + 1 == self.enPassantLocation[1]:
+                    moves.append(Move((r, c), (r + one_offset, c + 1), self.board, False, True))
 
     def getRookMoves(self, r, c, moves):
         enemy = "w"
@@ -917,7 +934,7 @@ class Move:
     files_to_cols = {"h": 7, "g": 6, "f": 5, "e": 4, "d": 3, "c": 2, "b": 1, "a": 0}
     cols_to_files = {v: k for k, v in files_to_cols.items()}
 
-    def __init__(self, start_square, end_square, board, rokada=False):  # konstruktor klase
+    def __init__(self, start_square, end_square, board, rokada=False, enPassant=False):  # konstruktor klase
         self.start_row = start_square[0]
         self.start_column = start_square[1]
         self.end_row = end_square[0]
@@ -925,11 +942,13 @@ class Move:
         self.piece_moved = board[self.start_row][self.start_column]
         self.piece_captured = board[self.end_row][self.end_column]
         self.rokada = rokada
+        self.enPassant = enPassant
 
     def __eq__(self, other):
         if isinstance(other, Move):
             if self.getChessNotation() == other.getChessNotation():
                 other.rokada = self.rokada
+                other.enPassant = self.enPassant
                 return True
         return False
 
