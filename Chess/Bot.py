@@ -22,7 +22,6 @@ class SagaBot:
             i += 1
         if len(eating_moves) != 0:
             return eating_moves.__getitem__(r.randrange(0, len(eating_moves), 1))
-        elif len(checking_moves) != 0:
+        if len(checking_moves) != 0:
             return checking_moves.__getitem__(r.randrange(0, len(checking_moves), 1))
-        else:
-            return valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
+        return valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
