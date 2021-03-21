@@ -15,16 +15,6 @@ class GameState:
             ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"],
         ]
-        self.shadows = [
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [-2, - 2, - 3, - 2, - 2, - 3, - 2, - 2],
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [2, 2, 3, 2, 2, 3, 2, 2],
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0],
-        ]
 
         self.pinned = []  # pozicije na kojima se nalaze figure koje su na putu izmedju figure koja jede i kralja
         self.allowed_pinned = []  # slucajevi ukoliko 'pinovane' figure mogu da pojedu figuru koja preti

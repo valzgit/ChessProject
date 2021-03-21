@@ -105,11 +105,12 @@ def main():
 
         # BOT PLAYING HERE
         if not gs.whiteToMove and not SAH_MAT:
-            move = bot1.calculateMoves(valid_moves)
+            move = bot1.calculateMoves(valid_moves, valid_enemy_moves)
             gs.makeMove(move)
             move_made = True
         elif gs.whiteToMove and not SAH_MAT:
-            move = valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
+            move = bot2.calculateMoves(valid_moves, valid_enemy_moves)
+            # move = valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
             gs.makeMove(move)
             move_made = True
 
