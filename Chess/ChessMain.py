@@ -1,5 +1,6 @@
 import pygame as p
 import random as r
+import serial
 from Chess import ChessEngine
 from Chess import Bot
 
@@ -9,6 +10,8 @@ SQ_SIZE = HEIGHT // DIMENSION
 MAX_FPS = 15
 IMAGES = {}
 
+arduinoData = serial.Serial('COM3', 9600)
+arduinoData.timeout = 1
 
 def loadImages():
     pieces = ["wP", "wR", "wK", "wB", "wN", "wQ", "bP", "bR", "bK", "bB", "bN", "bQ"]
@@ -71,6 +74,8 @@ def main():
                     if move in valid_moves:
                         print(move.getChessNotation())
                         gs.makeMove(move)
+                        # value = move.start_row * 1000 + move.start_column * 100 + move.end_row * 10 + move.end_column
+                        # arduinoData.write(str(value).encode())
                         move_made = True
                     playerClicks = []
                     square_selected = ()
@@ -108,11 +113,12 @@ def main():
             move = bot1.calculateMoves(valid_moves, valid_enemy_moves)
             gs.makeMove(move)
             move_made = True
-        elif gs.whiteToMove and not SAH_MAT:
-            move = bot2.calculateMoves(valid_moves, valid_enemy_moves)
-            # move = valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
-            gs.makeMove(move)
-            move_made = True
+        # elif gs.whiteToMove and not SAH_MAT:
+        #     # move = bot2.calculateMoves(valid_moves, valid_enemy_moves)
+        #     move = valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
+        #     arduinoData.write(move.start_row * 1000 + move.start_column * 100 + move.end_row * 10 + move.end_column)
+        #     gs.makeMove(move)
+        #     move_made = True
 
 
 def drawBoard(screen):
@@ -144,7 +150,6 @@ def drawPieces(screen, board):
             piece = board[r][c]
             if piece != "--":
                 screen.blit(IMAGES[piece], p.Rect(c * SQ_SIZE, r * SQ_SIZE, SQ_SIZE, SQ_SIZE))
-
 
 def drawGameState(screen, gs, possible_moves, king_position):
     drawBoard(screen)  # nacrtaj kvadratice
