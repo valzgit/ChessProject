@@ -10,7 +10,7 @@ class SagaBot:
         self.valid_moves = []
         self.valid_enemy_moves = []
 
-    def calculateMoves(self, valid_moves, valid_enemy_moves):
+    def calculateMoves(self, valid_moves, valid_enemy_moves, white_protect_list, black_protect_list, white_worth, black_worth):
         i = 0
         self.move_number += 1
         self.valid_moves = valid_moves
@@ -99,8 +99,12 @@ class SagaBot:
             move = selected_enemy_valid_moves.__getitem__(min_pos)
             me = self.gameState.board[move.start_row][move.start_column]
             selected_enemy_valid_moves.__delitem__(min_pos)
-            calculate_expense = self.eatableByGood(selected_valid_moves, selected_enemy_valid_moves,
-                                                   self.gameState.values[me[1]]) - calculate_expense
+            if self.gameState.values[me[1]] <= calculate_expense:
+                calculate_expense = self.eatableByGood(selected_valid_moves, selected_enemy_valid_moves,
+                                                       self.gameState.values[me[1]]) - calculate_expense
+            else:
+                calculate_expense = 0
+
         return calculate_expense
 
     def eatableByGood(self, selected_valid_moves, selected_enemy_valid_moves, ex_value):
@@ -121,13 +125,17 @@ class SagaBot:
             move = selected_valid_moves.__getitem__(min_pos)
             me = self.gameState.board[move.start_row][move.start_column]
             selected_valid_moves.__delitem__(min_pos)
-            calculate_expense = self.eatableByGood(selected_valid_moves, selected_enemy_valid_moves,
-                                                   self.gameState.values[me[1]]) + calculate_expense
+            if self.gameState.values[me[1]] <= calculate_expense:
+                calculate_expense = self.eatableByEnemy(selected_valid_moves, selected_enemy_valid_moves,
+                                                        self.gameState.values[me[1]]) + calculate_expense
+            else:
+                calculate_expense = 0
+
         return calculate_expense
 
     def generateMeList(self, valid_moves, i, move, selected_valid_moves, skip_iteration):
         j = 0
-        blocked_positions = []
+        blocked_positions = [] #branim da se pijun dva puta gleda (posto moze na 2 pozicije da ode prvi potez)
         while j < len(valid_moves):
             if (j != i and skip_iteration) or not skip_iteration:
                 while_move = valid_moves.__getitem__(j)
