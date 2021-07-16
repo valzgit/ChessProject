@@ -44,7 +44,7 @@ class GameState:
         self.blackRooksMoved = [False, False]
 
         self.king_check = False
-        self.values = {"P": 1, "R": 5, "N": 3, "B": 3, "Q": 9, "K": 100}
+        self.values = {"P": 1, "R": 5, "N": 3, "B": 3, "Q": 9, "K": 100} #optimizovati vrednost kralja
         self.multiplicator = {"b": -1, "w": 1}
         self.whiteToMove = True
         self.moveLog = []
@@ -145,6 +145,7 @@ class GameState:
         King = self.white_king
         if not self.whiteToMove:
             King = self.black_king
+
         next_to_king = []  # polja do aktuelnog kralja
         if King[0] > 0:
             next_to_king.append((King[0] - 1, King[1]))
@@ -404,9 +405,6 @@ class GameState:
         enemy = "w"
         if self.whiteToMove:
             enemy = "b"
-        elif not self.whiteToMove:
-            enemy = "w"
-
         pinning = False
         old_enemy_r = 0
         old_enemy_c = 0

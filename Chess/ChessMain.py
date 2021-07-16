@@ -30,7 +30,7 @@ def main():
     gs = ChessEngine.GameState()
     bot1 = Bot.SagaBot(gs)
     bot2 = Bot.SagaBot(gs)
-    valid_moves, valid_enemy_moves,white_protect_list, black_protect_list, white_worth, black_worth = gs.getValidMoves()
+    valid_moves, valid_enemy_moves, white_protect_list, black_protect_list, white_worth, black_worth = gs.getValidMoves()
     move_made = False
     loadImages()  # only once
     running = True
@@ -113,12 +113,12 @@ def main():
             move = bot1.calculateMoves(valid_moves, valid_enemy_moves,white_protect_list, black_protect_list, white_worth, black_worth)
             gs.makeMove(move)
             move_made = True
-        # elif gs.whiteToMove and not SAH_MAT:
-        #     # move = bot2.calculateMoves(valid_moves, valid_enemy_moves)
-        #     move = valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
-        #     #arduinoData.write(move.start_row * 1000 + move.start_column * 100 + move.end_row * 10 + move.end_column)
-        #     gs.makeMove(move)
-        #     move_made = True
+        elif gs.whiteToMove and not SAH_MAT:
+            # move = bot2.calculateMoves(valid_moves, valid_enemy_moves)
+            move = valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
+            #arduinoData.write(move.start_row * 1000 + move.start_column * 100 + move.end_row * 10 + move.end_column)
+            gs.makeMove(move)
+            move_made = True
 
 
 def drawBoard(screen):

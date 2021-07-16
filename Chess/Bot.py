@@ -26,10 +26,10 @@ class SagaBot:
             move = valid_moves.__getitem__(i)
             enemy = self.gameState.board[move.end_row][move.end_column]
             me = self.gameState.board[move.start_row][move.start_column]
-            if enemy != "--":
-                if enemy[1] == "K":
+            if enemy != "--": #ako postoji neprijatelj koji nije prazno polje
+                if enemy[1] == "K": #potez koji uradi sah
                     checking_moves.append(move)
-                else:
+                else: #potez koji jede
                     eating_moves.append(move)
                     selected_valid_moves = []
                     selected_enemy_valid_moves = []
@@ -86,7 +86,7 @@ class SagaBot:
         min_pos = -1
         min_val = 1000
         # print(len(selected_enemy_valid_moves))
-        while i < len(selected_enemy_valid_moves):
+        while i < len(selected_enemy_valid_moves): #trazim figuru najmanje vrednosti sa kojom moze protivnik da me pojede
             move = selected_enemy_valid_moves.__getitem__(i)
             me = self.gameState.board[move.start_row][move.start_column]
             if self.gameState.values[me[1]] < min_val:
@@ -95,7 +95,7 @@ class SagaBot:
                 calculate_expense = ex_value
             i += 1
 
-        if min_pos != -1:
+        if min_pos != -1: #racunam da ce taj potez da odigra protivnik, i onda ako vredi simuliram svoj naredni potez, ako ne vredi zavrsavam
             move = selected_enemy_valid_moves.__getitem__(min_pos)
             me = self.gameState.board[move.start_row][move.start_column]
             selected_enemy_valid_moves.__delitem__(min_pos)
