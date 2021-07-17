@@ -25,12 +25,10 @@ class GameState:
         self.check_through_king = []
         self.potential_white_pawn_check = []
         self.potential_black_pawn_check = []
-        self.whitePawnPoints = []
-        self.blackPawnPoints = []
+        self.whiteProtectsFrom = []
+        self.blackProtectsFrom = []
         self.whiteProtects = []
         self.blackProtects = []
-        self.whiteProtectsPoints = []
-        self.blackProtectsPoints = []
         self.enPassantLocation = [-1, -1]
         self.rokadaPossible = [False, False, False, False]  # BK-LBR, BK-RBR, WK-LWR, WK-RWR
         self.notEaten = 0
@@ -44,7 +42,7 @@ class GameState:
         self.blackRooksMoved = [False, False]
 
         self.king_check = False
-        self.values = {"P": 1, "R": 5, "N": 3, "B": 3, "Q": 9, "K": 100} #optimizovati vrednost kralja
+        self.values = {"P": 1, "R": 5, "N": 3, "B": 3, "Q": 9, "K": 100}  # optimizovati vrednost kralja
         self.multiplicator = {"b": -1, "w": 1}
         self.whiteToMove = True
         self.moveLog = []
@@ -318,28 +316,26 @@ class GameState:
             if self.rokadaPossible[1]:
                 moves.append(Move(self.black_king, (0, 6), self.board, True))
 
-        white_protect_list = self.whiteProtects + self.potential_white_pawn_check
-        black_protect_list = self.blackProtects + self.potential_black_pawn_check
-        white_worth = self.whiteProtectsPoints + self.whitePawnPoints
-        black_worth = self.blackProtectsPoints + self.blackPawnPoints
+        # white_protect_list = self.whiteProtects + self.potential_white_pawn_check
+        # black_protect_list = self.blackProtects + self.potential_black_pawn_check
+
+        white_protect_list = self.whiteProtectsFrom
+        black_protect_list = self.blackProtectsFrom
 
         # cistka svega
         self.potential_white_pawn_check = []
         self.potential_black_pawn_check = []
         self.check_path_to_king = []
         self.check_through_king = []
+        self.whiteProtectsFrom = []
+        self.blackProtectsFrom = []
         self.blackProtects = []
         self.whiteProtects = []
-        self.check_path_to_king = []
         self.pinned = []
-        self.whitePawnPoints = []
-        self.blackPawnPoints = []
-        self.whiteProtectsPoints = []
-        self.blackProtectsPoints = []
-        self.figures_checking_king = 0
+        self.allowed_pinned = []
         self.figures_checking_king = 0
 
-        return moves, enemy_moves, white_protect_list, black_protect_list, white_worth, black_worth
+        return moves, enemy_moves, white_protect_list, black_protect_list
 
     def getKingPosition(self):
         king_position = ()
@@ -378,10 +374,10 @@ class GameState:
                 elif self.board[r + one_offset][c - 1][0] != enemy:
                     if self.whiteToMove:
                         self.potential_white_pawn_check.append((r + one_offset, c - 1))
-                        self.whitePawnPoints.append(1)
+                        self.whiteProtectsFrom.append(Move((r, c), (r + one_offset, c - 1), self.board))
                     else:
                         self.potential_black_pawn_check.append((r + one_offset, c - 1))
-                        self.blackPawnPoints.append(1)
+                        self.blackProtectsFrom.append(Move((r, c), (r + one_offset, c - 1), self.board))
                 if r + one_offset == self.enPassantLocation[0] and c - 1 == self.enPassantLocation[1]:
                     moves.append(Move((r, c), (r + one_offset, c - 1), self.board, False, True))
             if c + 1 <= 7:
@@ -394,10 +390,10 @@ class GameState:
                 elif self.board[r + one_offset][c + 1][0] != enemy:
                     if self.whiteToMove:
                         self.potential_white_pawn_check.append((r + one_offset, c + 1))
-                        self.whitePawnPoints.append(1)
+                        self.whiteProtectsFrom.append(Move((r, c), (r + one_offset, c + 1), self.board))
                     else:
                         self.potential_black_pawn_check.append((r + one_offset, c + 1))
-                        self.blackPawnPoints.append(1)
+                        self.blackProtectsFrom.append(Move((r, c), (r + one_offset, c + 1), self.board))
                 if r + one_offset == self.enPassantLocation[0] and c + 1 == self.enPassantLocation[1]:
                     moves.append(Move((r, c), (r + one_offset, c + 1), self.board, False, True))
 
@@ -437,10 +433,10 @@ class GameState:
             elif not pinning:
                 if self.whiteToMove:
                     self.whiteProtects.append((i, c))
-                    self.whiteProtectsPoints.append(5)
+                    self.whiteProtectsFrom.append(Move((r, c), (i, c), self.board))
                 else:
                     self.blackProtects.append((i, c))
-                    self.blackProtectsPoints.append(5)
+                    self.blackProtectsFrom.append(Move((r, c), (i, c), self.board))
                 break
 
         if made_check:
@@ -480,10 +476,10 @@ class GameState:
             elif not pinning:
                 if self.whiteToMove:
                     self.whiteProtects.append((i, c))
-                    self.whiteProtectsPoints.append(5)
+                    self.whiteProtectsFrom.append(Move((r, c), (i, c), self.board))
                 else:
                     self.blackProtects.append((i, c))
-                    self.blackProtectsPoints.append(5)
+                    self.blackProtectsFrom.append(Move((r, c), (i, c), self.board))
                 break
 
         if made_check:
@@ -523,10 +519,10 @@ class GameState:
             elif not pinning:
                 if self.whiteToMove:
                     self.whiteProtects.append((r, i))
-                    self.whiteProtectsPoints.append(5)
+                    self.whiteProtectsFrom.append(Move((r, c), (r, i), self.board))
                 else:
                     self.blackProtects.append((r, i))
-                    self.blackProtectsPoints.append(5)
+                    self.blackProtectsFrom.append(Move((r, c), (r, i), self.board))
                 break
 
         if made_check:
@@ -567,10 +563,10 @@ class GameState:
             elif not pinning:
                 if self.whiteToMove:
                     self.whiteProtects.append((r, i))
-                    self.whiteProtectsPoints.append(5)
+                    self.whiteProtectsFrom.append(Move((r, c), (r, i), self.board))
                 else:
                     self.blackProtects.append((r, i))
-                    self.blackProtectsPoints.append(5)
+                    self.blackProtectsFrom.append(Move((r, c), (r, i), self.board))
                 break
 
         if made_check:
@@ -599,10 +595,10 @@ class GameState:
             elif 8 > r_offsets[i] >= 0 and 8 > c_offsets[i] >= 0:
                 if self.whiteToMove:
                     self.whiteProtects.append((r_offsets[i], c_offsets[i]))
-                    self.whiteProtectsPoints.append(3)
+                    self.whiteProtectsFrom.append(Move((r, c), (r_offsets[i], c_offsets[i]), self.board))
                 else:
                     self.blackProtects.append((r_offsets[i], c_offsets[i]))
-                    self.blackProtectsPoints.append(3)
+                    self.blackProtectsFrom.append(Move((r, c), (r_offsets[i], c_offsets[i]), self.board))
             i += 1
 
     def getKingMoves(self, r, c, moves):
@@ -638,10 +634,10 @@ class GameState:
             else:
                 if self.whiteToMove:
                     self.whiteProtects.append((i, c))
-                    self.whiteProtectsPoints.append(1)
+                    self.whiteProtectsFrom.append(Move((r, c), (i, c), self.board))
                 else:
                     self.blackProtects.append((i, c))
-                    self.blackProtectsPoints.append(1)
+                    self.blackProtectsFrom.append(Move((r, c), (i, c), self.board))
             break
 
         for i in range(r - 1, -1, -1):
@@ -652,10 +648,10 @@ class GameState:
             else:
                 if self.whiteToMove:
                     self.whiteProtects.append((i, c))
-                    self.whiteProtectsPoints.append(1)
+                    self.whiteProtectsFrom.append(Move((r, c), (i, c), self.board))
                 else:
                     self.blackProtects.append((i, c))
-                    self.blackProtectsPoints.append(1)
+                    self.blackProtectsFrom.append(Move((r, c), (i, c), self.board))
             break
 
         for i in range(c + 1, 8):
@@ -666,10 +662,10 @@ class GameState:
             else:
                 if self.whiteToMove:
                     self.whiteProtects.append((r, i))
-                    self.whiteProtectsPoints.append(1)
+                    self.whiteProtectsFrom.append(Move((r, c), (r, i), self.board))
                 else:
                     self.blackProtects.append((r, i))
-                    self.blackProtectsPoints.append(1)
+                    self.blackProtectsFrom.append(Move((r, c), (r, i), self.board))
             break
 
         for i in range(c - 1, -1, -1):
@@ -680,10 +676,10 @@ class GameState:
             else:
                 if self.whiteToMove:
                     self.whiteProtects.append((r, i))
-                    self.whiteProtectsPoints.append(1)
+                    self.whiteProtectsFrom.append(Move((r, c), (r, i), self.board))
                 else:
                     self.blackProtects.append((r, i))
-                    self.blackProtectsPoints.append(1)
+                    self.blackProtectsFrom.append(Move((r, c), (r, i), self.board))
             break
 
     def getKingBishopMoves(self, r, c, moves):
@@ -707,10 +703,10 @@ class GameState:
             else:
                 if self.whiteToMove:
                     self.whiteProtects.append((i, new_c))
-                    self.whiteProtectsPoints.append(1)
+                    self.whiteProtectsFrom.append(Move((r, c), (i, new_c), self.board))
                 else:
                     self.blackProtects.append((i, new_c))
-                    self.blackProtectsPoints.append(1)
+                    self.blackProtectsFrom.append(Move((r, c), (i, new_c), self.board))
             break
 
         new_c = c
@@ -727,10 +723,10 @@ class GameState:
             else:
                 if self.whiteToMove:
                     self.whiteProtects.append((i, new_c))
-                    self.whiteProtectsPoints.append(1)
+                    self.whiteProtectsFrom.append(Move((r, c), (i, new_c), self.board))
                 else:
                     self.blackProtects.append((i, new_c))
-                    self.blackProtectsPoints.append(1)
+                    self.blackProtectsFrom.append(Move((r, c), (i, new_c), self.board))
             break
 
         new_r = r
@@ -747,10 +743,10 @@ class GameState:
             else:
                 if self.whiteToMove:
                     self.whiteProtects.append((new_r, i))
-                    self.whiteProtectsPoints.append(1)
+                    self.whiteProtectsFrom.append(Move((r, c), (new_r, i), self.board))
                 else:
                     self.blackProtects.append((new_r, i))
-                    self.blackProtectsPoints.append(1)
+                    self.blackProtectsFrom.append(Move((r, c), (new_r, i), self.board))
             break
 
         new_r = r
@@ -767,10 +763,10 @@ class GameState:
             else:
                 if self.whiteToMove:
                     self.whiteProtects.append((new_r, i))
-                    self.whiteProtectsPoints.append(1)
+                    self.whiteProtectsFrom.append(Move((r, c), (new_r, i), self.board))
                 else:
                     self.blackProtects.append((new_r, i))
-                    self.blackProtectsPoints.append(1)
+                    self.blackProtectsFrom.append(Move((r, c), (new_r, i), self.board))
             break
 
     def getQueenMoves(self, r, c, moves):
@@ -817,10 +813,10 @@ class GameState:
             elif not pinning:
                 if self.whiteToMove:
                     self.whiteProtects.append((i, new_c))
-                    self.whiteProtectsPoints.append(3)
+                    self.whiteProtectsFrom.append(Move((r, c), (i, new_c), self.board))
                 else:
                     self.blackProtects.append((i, new_c))
-                    self.blackProtectsPoints.append(3)
+                    self.blackProtectsFrom.append(Move((r, c), (i, new_c), self.board))
                 break
         if made_check:
             for elem in check_road:
@@ -863,10 +859,10 @@ class GameState:
             elif not pinning:
                 if self.whiteToMove:
                     self.whiteProtects.append((i, new_c))
-                    self.whiteProtectsPoints.append(3)
+                    self.whiteProtectsFrom.append(Move((r, c), (i, new_c), self.board))
                 else:
                     self.blackProtects.append((i, new_c))
-                    self.blackProtectsPoints.append(3)
+                    self.blackProtectsFrom.append(Move((r, c), (i, new_c), self.board))
                 break
         if made_check:
             for elem in check_road:
@@ -909,10 +905,10 @@ class GameState:
             elif not pinning:
                 if self.whiteToMove:
                     self.whiteProtects.append((new_r, i))
-                    self.whiteProtectsPoints.append(3)
+                    self.whiteProtectsFrom.append(Move((r, c), (new_r, i), self.board))
                 else:
                     self.blackProtects.append((new_r, i))
-                    self.blackProtectsPoints.append(3)
+                    self.blackProtectsFrom.append(Move((r, c), (new_r, i), self.board))
                 break
         if made_check:
             for elem in check_road:
@@ -955,10 +951,10 @@ class GameState:
             elif not pinning:
                 if self.whiteToMove:
                     self.whiteProtects.append((new_r, i))
-                    self.whiteProtectsPoints.append(3)
+                    self.whiteProtectsFrom.append(Move((r, c), (new_r, i), self.board))
                 else:
                     self.blackProtects.append((new_r, i))
-                    self.blackProtectsPoints.append(3)
+                    self.blackProtectsFrom.append(Move((r, c), (new_r, i), self.board))
                 break
         if made_check:
             for elem in check_road:

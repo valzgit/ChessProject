@@ -10,11 +10,14 @@ class SagaBot:
         self.valid_moves = []
         self.valid_enemy_moves = []
 
-    def calculateMoves(self, valid_moves, valid_enemy_moves, white_protect_list, black_protect_list, white_worth, black_worth):
+    def calculateMoves(self, valid_moves, valid_enemy_moves, white_protect_list, black_protect_list, whiteToMove):
         i = 0
         self.move_number += 1
         self.valid_moves = valid_moves
         self.valid_enemy_moves = valid_enemy_moves
+        self.white_protect_list = white_protect_list
+        self.black_protect_list = black_protect_list
+        self.whiteToMove = whiteToMove
         safe_eating_moves = []
         eating_moves = []
         checking_moves = []
@@ -26,16 +29,29 @@ class SagaBot:
             move = valid_moves.__getitem__(i)
             enemy = self.gameState.board[move.end_row][move.end_column]
             me = self.gameState.board[move.start_row][move.start_column]
-            if enemy != "--": #ako postoji neprijatelj koji nije prazno polje
-                if enemy[1] == "K": #potez koji uradi sah
+            if enemy != "--":  # ako postoji neprijatelj koji nije prazno polje
+                if enemy[1] == "K":  # potez koji uradi sah
                     checking_moves.append(move)
-                else: #potez koji jede
+                else:  # potez koji jede
                     eating_moves.append(move)
                     selected_valid_moves = []
                     selected_enemy_valid_moves = []
 
-                    self.generateMeList(valid_moves, i, move, selected_valid_moves, True)
-                    self.generateMeList(valid_enemy_moves, i, move, selected_enemy_valid_moves, False)
+                    self.generateMeList(valid_moves, i, move, selected_valid_moves,
+                                        True)  # generisem listu poteza koji idu na istu destinaciju kao i ovaj potez`
+                    self.generateMeList(valid_enemy_moves, i, move, selected_enemy_valid_moves,
+                                        False)  # isto i za protivnicke poteze
+
+                    if self.whiteToMove:
+                        self.expandMeList(white_protect_list, selected_valid_moves, i, True, move)
+                        self.expandMeList(black_protect_list, selected_enemy_valid_moves, i, False, move)
+                    else:
+                        self.expandMeList(black_protect_list, selected_valid_moves, i, True, move)
+                        self.expandMeList(white_protect_list, selected_enemy_valid_moves, i, False, move)
+
+                    selected_valid_moves.sort(key=self.sortByVal)
+                    selected_enemy_valid_moves.sort(key=self.sortByVal)
+
                     val = self.eatableByEnemy(selected_valid_moves, selected_enemy_valid_moves,
                                               self.gameState.values[me[1]]) + \
                           self.gameState.values[enemy[1]]
@@ -50,8 +66,13 @@ class SagaBot:
             else:
                 selected_valid_moves = []
                 selected_enemy_valid_moves = []
+
                 self.generateMeList(valid_moves, i, move, selected_valid_moves, True)
                 self.generateMeList(valid_enemy_moves, i, move, selected_enemy_valid_moves, False)
+
+                selected_valid_moves.sort(key=self.sortByVal)
+                selected_enemy_valid_moves.sort(key=self.sortByVal)
+
                 val = self.eatableByEnemy(selected_valid_moves, selected_enemy_valid_moves,
                                           self.gameState.values[me[1]])
                 if val >= 0:
@@ -80,26 +101,17 @@ class SagaBot:
         #     return eating_moves.__getitem__(r.randrange(0, len(eating_moves), 1))
         return valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
 
-    def eatableByEnemy(self, selected_valid_moves, selected_enemy_valid_moves, ex_value):
+    def eatableByEnemy(self, selected_valid_moves, selected_enemy_valid_moves,
+                       ex_value):  # gledam koliko dugo traje razmena jedenjem i da li ja izlazim kao pobednik iz toga
         calculate_expense = 0
-        i = 0
-        min_pos = -1
-        min_val = 1000
-        # print(len(selected_enemy_valid_moves))
-        while i < len(selected_enemy_valid_moves): #trazim figuru najmanje vrednosti sa kojom moze protivnik da me pojede
-            move = selected_enemy_valid_moves.__getitem__(i)
-            me = self.gameState.board[move.start_row][move.start_column]
-            if self.gameState.values[me[1]] < min_val:
-                min_val = self.gameState.values[me[1]]
-                min_pos = i
-                calculate_expense = ex_value
-            i += 1
 
-        if min_pos != -1: #racunam da ce taj potez da odigra protivnik, i onda ako vredi simuliram svoj naredni potez, ako ne vredi zavrsavam
-            move = selected_enemy_valid_moves.__getitem__(min_pos)
+        if len(selected_enemy_valid_moves) != 0:  # trazim figuru najmanje vrednosti sa kojom moze protivnik da me pojede
+            calculate_expense = ex_value
+            move = selected_enemy_valid_moves.__getitem__(0)
             me = self.gameState.board[move.start_row][move.start_column]
-            selected_enemy_valid_moves.__delitem__(min_pos)
-            if self.gameState.values[me[1]] <= calculate_expense:
+            selected_enemy_valid_moves.__delitem__(0)
+            if self.gameState.values[me[
+                1]] <= calculate_expense:  # racunam da ce taj potez da odigra protivnik, i onda ako vredi simuliram svoj naredni potez, ako ne vredi zavrsavam
                 calculate_expense = self.eatableByGood(selected_valid_moves, selected_enemy_valid_moves,
                                                        self.gameState.values[me[1]]) - calculate_expense
             else:
@@ -109,22 +121,12 @@ class SagaBot:
 
     def eatableByGood(self, selected_valid_moves, selected_enemy_valid_moves, ex_value):
         calculate_expense = 0
-        i = 0
-        min_pos = -1
-        min_val = 1000
-        while i < len(selected_valid_moves):
-            move = selected_valid_moves.__getitem__(i)
-            me = self.gameState.board[move.start_row][move.start_column]
-            if self.gameState.values[me[1]] < min_val:
-                min_val = self.gameState.values[me[1]]
-                min_pos = i
-                calculate_expense = ex_value
-            i += 1
 
-        if min_pos != -1:
-            move = selected_valid_moves.__getitem__(min_pos)
+        if len(selected_valid_moves) != 0:
+            calculate_expense = ex_value
+            move = selected_valid_moves.__getitem__(0)
             me = self.gameState.board[move.start_row][move.start_column]
-            selected_valid_moves.__delitem__(min_pos)
+            selected_valid_moves.__delitem__(0)
             if self.gameState.values[me[1]] <= calculate_expense:
                 calculate_expense = self.eatableByEnemy(selected_valid_moves, selected_enemy_valid_moves,
                                                         self.gameState.values[me[1]]) + calculate_expense
@@ -133,9 +135,18 @@ class SagaBot:
 
         return calculate_expense
 
+    def expandMeList(self, possible_moves, selected_valid_moves, i, skip_iteration, move):
+        j = 0
+        while j < len(possible_moves):
+            if j != i or (not skip_iteration and j == i):
+                while_move = possible_moves.__getitem__(j)
+                if move.end_row == while_move.end_row and move.end_column == while_move.end_column:
+                    selected_valid_moves.append(while_move)
+            j += 1
+
     def generateMeList(self, valid_moves, i, move, selected_valid_moves, skip_iteration):
         j = 0
-        blocked_positions = [] #branim da se pijun dva puta gleda (posto moze na 2 pozicije da ode prvi potez)
+        blocked_positions = []  # branim da se pijun dva puta gleda (posto moze na 2 pozicije da ode prvi potez)
         while j < len(valid_moves):
             if (j != i and skip_iteration) or not skip_iteration:
                 while_move = valid_moves.__getitem__(j)
@@ -188,3 +199,6 @@ class SagaBot:
                                 #     while_move.start_row + 1) + " " + str(while_move.start_column + 1))
             j += 1
         # print("-------------------------------------------")
+
+    def sortByVal(self, move):
+        return self.gameState.values[self.gameState.board[move.start_row][move.start_column][1]]
