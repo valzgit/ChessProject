@@ -438,6 +438,8 @@ class GameState:
                     self.blackProtects.append((i, c))
                     self.blackProtectsFrom.append(Move((r, c), (i, c), self.board))
                 break
+            elif pinning and self.board[i][c][0] != enemy and self.board[i][c] != "--":
+                break
 
         if made_check:
             for elem in check_road:
@@ -480,6 +482,8 @@ class GameState:
                 else:
                     self.blackProtects.append((i, c))
                     self.blackProtectsFrom.append(Move((r, c), (i, c), self.board))
+                break
+            elif pinning and self.board[i][c][0] != enemy and self.board[i][c] != "--":
                 break
 
         if made_check:
@@ -524,6 +528,8 @@ class GameState:
                     self.blackProtects.append((r, i))
                     self.blackProtectsFrom.append(Move((r, c), (r, i), self.board))
                 break
+            elif pinning and self.board[r][i][0] != enemy and self.board[r][i] != "--":
+                break
 
         if made_check:
             for elem in check_road:
@@ -567,6 +573,8 @@ class GameState:
                 else:
                     self.blackProtects.append((r, i))
                     self.blackProtectsFrom.append(Move((r, c), (r, i), self.board))
+                break
+            elif pinning and self.board[r][i][0] != enemy and self.board[r][i] != "--":
                 break
 
         if made_check:
@@ -818,6 +826,9 @@ class GameState:
                     self.blackProtects.append((i, new_c))
                     self.blackProtectsFrom.append(Move((r, c), (i, new_c), self.board))
                 break
+            elif pinning and self.board[i][new_c][0] != enemy and self.board[i][new_c] != "--":
+                break
+
         if made_check:
             for elem in check_road:
                 self.check_path_to_king.append(elem)
@@ -864,6 +875,9 @@ class GameState:
                     self.blackProtects.append((i, new_c))
                     self.blackProtectsFrom.append(Move((r, c), (i, new_c), self.board))
                 break
+            elif pinning and self.board[i][new_c][0] != enemy and self.board[i][new_c] != "--":
+                break
+
         if made_check:
             for elem in check_road:
                 self.check_path_to_king.append(elem)
@@ -910,6 +924,9 @@ class GameState:
                     self.blackProtects.append((new_r, i))
                     self.blackProtectsFrom.append(Move((r, c), (new_r, i), self.board))
                 break
+            elif pinning and self.board[new_r][i][0] != enemy and self.board[new_r][i] != "--":
+                break
+
         if made_check:
             for elem in check_road:
                 self.check_path_to_king.append(elem)
@@ -956,6 +973,9 @@ class GameState:
                     self.blackProtects.append((new_r, i))
                     self.blackProtectsFrom.append(Move((r, c), (new_r, i), self.board))
                 break
+            elif pinning and self.board[new_r][i][0] != enemy and self.board[new_r][i] != "--":
+                break
+
         if made_check:
             for elem in check_road:
                 self.check_path_to_king.append(elem)

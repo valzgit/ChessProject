@@ -10,8 +10,8 @@ SQ_SIZE = HEIGHT // DIMENSION
 MAX_FPS = 15
 IMAGES = {}
 
-#arduinoData = serial.Serial('COM3', 9600)
-#arduinoData.timeout = 1
+# arduinoData = serial.Serial('COM3', 9600)
+# arduinoData.timeout = 1
 
 def loadImages():
     pieces = ["wP", "wR", "wK", "wB", "wN", "wQ", "bP", "bR", "bK", "bB", "bN", "bQ"]
@@ -111,12 +111,14 @@ def main():
         # BOT PLAYING HERE
         if not gs.whiteToMove and not SAH_MAT:
             move = bot1.calculateMoves(valid_moves, valid_enemy_moves,white_protect_list, black_protect_list,gs.whiteToMove)
+            # value = move.start_row * 1000 + move.start_column * 100 + move.end_row * 10 + move.end_column
+            # arduinoData.write(str(value).encode())
             gs.makeMove(move)
             move_made = True
         elif gs.whiteToMove and not SAH_MAT:
-            # move = bot2.calculateMoves(valid_moves, valid_enemy_moves)
+            # move = bot2.calculateMoves(valid_moves, valid_enemy_moves,white_protect_list, black_protect_list,gs.whiteToMove)
             # move = valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
-            #arduinoData.write(move.start_row * 1000 + move.start_column * 100 + move.end_row * 10 + move.end_column)
+            # arduinoData.write(move.start_row * 1000 + move.start_column * 100 + move.end_row * 10 + move.end_column)
             # gs.makeMove(move)
             move_made = True
 
