@@ -36,6 +36,8 @@ def main():
     running = True
     square_selected = ()
     playerClicks = []
+    gamemode = 1
+    move_start_end_pos = []
     while running:
         for e in p.event.get():
             if e.type == p.QUIT:
@@ -73,6 +75,7 @@ def main():
                     move = ChessEngine.Move(playerClicks[0], playerClicks[1], gs.board)
                     if move in valid_moves:
                         print(move.getChessNotation())
+                        move_start_end_pos = [(move.start_row, move.start_column), (move.end_row, move.end_column)]
                         gs.makeMove(move)
                         # value = move.start_row * 1000 + move.start_column * 100 + move.end_row * 10 + move.end_column
                         # arduinoData.write(str(value).encode())
@@ -86,6 +89,16 @@ def main():
                     playerClicks = []
                     square_selected = ()
                     move_made = True
+                elif e.key == p.K_ESCAPE:
+                    running = False
+                elif e.key == p.K_1:
+                    gamemode = 1 # covek vs covek
+                elif e.key == p.K_2:
+                    gamemode = 2 # covek vs bot
+                elif e.key == p.K_3:
+                    gamemode = 3 # bot(random) vs bot (razvijeni)
+                elif e.key == p.K_4:
+                    gamemode = 4 # bot (razvijeni) vs bot (razvijeni)
 
         if move_made:
             valid_moves, valid_enemy_moves,white_protect_list, black_protect_list = gs.getValidMoves()
@@ -104,31 +117,46 @@ def main():
             move_made = False
             king_position = gs.getKingPosition()
 
-        drawGameState(screen, gs, possible_moves, king_position)
+        drawGameState(screen, gs, possible_moves, king_position, move_start_end_pos)
         clock.tick(MAX_FPS)
         p.display.flip()
 
         # BOT PLAYING HERE
         if not gs.whiteToMove and not SAH_MAT:
-            move = bot1.calculateMoves(valid_moves, valid_enemy_moves,white_protect_list, black_protect_list,gs.whiteToMove)
+            if gamemode >= 2:
+                move = bot1.calculateMoves(valid_moves, valid_enemy_moves, white_protect_list, black_protect_list, gs.whiteToMove)
+                move_start_end_pos = [(move.start_row, move.start_column), (move.end_row, move.end_column)]
+                gs.makeMove(move)
             # value = move.start_row * 1000 + move.start_column * 100 + move.end_row * 10 + move.end_column
             # arduinoData.write(str(value).encode())
-            gs.makeMove(move)
-            move_made = True
+                move_made = True
         elif gs.whiteToMove and not SAH_MAT:
-            # move = bot2.calculateMoves(valid_moves, valid_enemy_moves,white_protect_list, black_protect_list,gs.whiteToMove)
-            # move = valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
-            # arduinoData.write(move.start_row * 1000 + move.start_column * 100 + move.end_row * 10 + move.end_column)
-            # gs.makeMove(move)
-            move_made = True
+            if gamemode == 3: #random bot
+                move = valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
+                move_start_end_pos = [(move.start_row, move.start_column), (move.end_row, move.end_column)]
+                gs.makeMove(move)
+                move_made = True
+            elif gamemode == 4:
+                move = bot2.calculateMoves(valid_moves, valid_enemy_moves,white_protect_list, black_protect_list,gs.whiteToMove)
+                move_start_end_pos = [(move.start_row, move.start_column), (move.end_row, move.end_column)]
+                gs.makeMove(move)
+                # arduinoData.write(move.start_row * 1000 + move.start_column * 100 + move.end_row * 10 + move.end_column)
+                move_made = True
 
 
-def drawBoard(screen):
+def drawBoard(screen, move_start_end_pos):
     colors = [p.Color(241, 217, 192), p.Color(169, 122, 101)]
+    move_color = p.Color(0, 100, 0)
     for r in range(DIMENSION):
         for c in range(DIMENSION):
             color = colors[((r + c) % 2)]
             p.draw.rect(screen, color, p.Rect(c * SQ_SIZE, r * SQ_SIZE, SQ_SIZE, SQ_SIZE))
+            if len(move_start_end_pos) > 0 and (r, c) == move_start_end_pos[0]:
+                p.draw.rect(screen, move_color, p.Rect(c * SQ_SIZE, r * SQ_SIZE, SQ_SIZE, SQ_SIZE))
+                p.draw.rect(screen, color, p.Rect(c * SQ_SIZE + 2, r * SQ_SIZE + 2, SQ_SIZE - 4, SQ_SIZE - 4))
+            elif len(move_start_end_pos) > 0 and (r, c) == move_start_end_pos[1]:
+                p.draw.rect(screen, move_color, p.Rect(c * SQ_SIZE, r * SQ_SIZE, SQ_SIZE, SQ_SIZE))
+                p.draw.rect(screen, color, p.Rect(c * SQ_SIZE + 2, r * SQ_SIZE + 2, SQ_SIZE - 4, SQ_SIZE - 4))
 
 
 def drawPossibleMoves(screen, possiblemoves):
@@ -153,8 +181,8 @@ def drawPieces(screen, board):
             if piece != "--":
                 screen.blit(IMAGES[piece], p.Rect(c * SQ_SIZE, r * SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
-def drawGameState(screen, gs, possible_moves, king_position):
-    drawBoard(screen)  # nacrtaj kvadratice
+def drawGameState(screen, gs, possible_moves, king_position, move_start_end_pos):
+    drawBoard(screen, move_start_end_pos)  # nacrtaj kvadratice
     drawPieces(screen, gs.board)  # nacrtaj figure
     drawPossibleMoves(screen, possible_moves)  # nacrtaj polja
     drawCheck(screen, king_position, gs.board)

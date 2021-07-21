@@ -43,7 +43,6 @@ class GameState:
 
         self.king_check = False
         self.values = {"P": 1, "R": 5, "N": 3, "B": 3, "Q": 9, "K": 100}  # optimizovati vrednost kralja
-        self.multiplicator = {"b": -1, "w": 1}
         self.whiteToMove = True
         self.moveLog = []
 
@@ -51,12 +50,14 @@ class GameState:
         self.enPassantLocation[0] = -1
         self.enPassantLocation[1] = -1
         self.board[move.start_row][move.start_column] = "--"
-        if (move.piece_moved[1] == "P") and ((move.piece_moved[0] == "w" and move.end_row == 0) or (
+
+        if (move.piece_moved[1] == "P") and ((move.piece_moved[0] == "w" and move.end_row == 0) or ( #promovisanje piuna u kraljicu
                 move.piece_moved[0] == "b" and move.end_row == 7)):
             if move.piece_moved[0] == "w":
                 move.piece_moved = "wQ"
             else:
                 move.piece_moved = "bQ"
+
         if (move.piece_moved[1] == "P") and (move.end_row - move.start_row == 2 or move.end_row - move.start_row == -2):
             self.enPassantLocation[1] = move.start_column
             if move.end_row - move.start_row == 2:
@@ -64,12 +65,14 @@ class GameState:
             else:
                 self.enPassantLocation[0] = move.end_row + 1
 
+        # deluje nebitno
         if self.board[move.end_row][move.end_column] != "--" or move.piece_moved[1] == "P":
             self.notEaten = 0
         else:
             self.notEaten += 1
 
         self.board[move.end_row][move.end_column] = move.piece_moved
+
         if move.enPassant:
             if move.end_row == 2:
                 self.board[3][move.end_column] = "--"
@@ -81,18 +84,26 @@ class GameState:
                 self.board[0][3] = "bR"
                 self.board[0][0] = "--"
                 self.blackKingMoved = True
+                self.rokadaPossible[0] = False
+                self.rokadaPossible[1] = False
             elif (move.end_row, move.end_column) == (0, 6):
                 self.board[0][5] = "bR"
                 self.board[0][7] = "--"
                 self.blackKingMoved = True
+                self.rokadaPossible[0] = False
+                self.rokadaPossible[1] = False
             elif (move.end_row, move.end_column) == (7, 2):
                 self.board[7][3] = "wR"
                 self.board[7][0] = "--"
                 self.whiteKingMoved = True
+                self.rokadaPossible[2] = False
+                self.rokadaPossible[3] = False
             elif (move.end_row, move.end_column) == (7, 6):
                 self.board[7][5] = "wR"
                 self.board[7][7] = "--"
                 self.whiteKingMoved = True
+                self.rokadaPossible[2] = False
+                self.rokadaPossible[3] = False
 
         if (move.start_row, move.start_column) == self.white_king:
             self.white_king = (move.end_row, move.end_column)
@@ -100,6 +111,7 @@ class GameState:
         elif (move.start_row, move.start_column) == self.black_king:
             self.black_king = (move.end_row, move.end_column)
             self.blackKingMoved = True
+
         if move.start_row == 0:
             if move.start_column == 0:
                 self.blackRooksMoved[0] = True
@@ -110,10 +122,11 @@ class GameState:
                 self.whiteRooksMoved[0] = True
             if move.start_column == 7:
                 self.whiteRooksMoved[1] = True
+
         self.moveLog.append(move)  # sacuvamo potez
         self.whiteToMove = not self.whiteToMove
 
-    def undoMove(self):
+    def undoMove(self): #radi ali onako, test svrhe iskljucivo
         if len(self.moveLog) != 0:
             move = self.moveLog.pop()
             self.board[move.start_row][move.start_column] = move.piece_moved
@@ -185,7 +198,6 @@ class GameState:
             self.rokadaPossible[2] = False
             self.rokadaPossible[3] = False
 
-        # kralj ne sme da se pomera tamo gde se krecu protivnicke figure (sem piuna za njih se gleda da li jedu)
         i = 0
         while i < len(enemy_moves):
             move = enemy_moves.__getitem__(i)
@@ -199,6 +211,8 @@ class GameState:
                 self.rokadaPossible[1] = False
             if self.rokadaPossible[3] and move.end_row == 7 and 5 <= move.end_column < 7:
                 self.rokadaPossible[3] = False
+
+            # kralj ne sme da se pomera tamo gde se krecu protivnicke figure (sem piuna za njih se gleda da li jedu)
 
             if self.board[row][col][1] != "P" and (
                     move.end_row, move.end_column) in next_to_king:
@@ -230,7 +244,7 @@ class GameState:
                 while index < len(king_play_indexes):
                     where = king_play_indexes.__getitem__(index)
                     king_move = moves.__getitem__(where)
-                    if (king_move.end_row, king_move.end_column) == (move[0], move[1]):
+                    if (king_move.end_row, king_move.end_column) == move:
                         moves.__delitem__(where)
                         king_play_indexes.__delitem__(index)
                         pom_brojac = index
@@ -374,10 +388,12 @@ class GameState:
                 elif self.board[r + one_offset][c - 1][0] != enemy:
                     if self.whiteToMove:
                         self.potential_white_pawn_check.append((r + one_offset, c - 1))
-                        self.whiteProtectsFrom.append(Move((r, c), (r + one_offset, c - 1), self.board))
+                        if self.board[r + one_offset][c - 1] != "--":
+                            self.whiteProtectsFrom.append(Move((r, c), (r + one_offset, c - 1), self.board))
                     else:
                         self.potential_black_pawn_check.append((r + one_offset, c - 1))
-                        self.blackProtectsFrom.append(Move((r, c), (r + one_offset, c - 1), self.board))
+                        if self.board[r + one_offset][c - 1] != "--":
+                            self.blackProtectsFrom.append(Move((r, c), (r + one_offset, c - 1), self.board))
                 if r + one_offset == self.enPassantLocation[0] and c - 1 == self.enPassantLocation[1]:
                     moves.append(Move((r, c), (r + one_offset, c - 1), self.board, False, True))
             if c + 1 <= 7:
@@ -390,10 +406,12 @@ class GameState:
                 elif self.board[r + one_offset][c + 1][0] != enemy:
                     if self.whiteToMove:
                         self.potential_white_pawn_check.append((r + one_offset, c + 1))
-                        self.whiteProtectsFrom.append(Move((r, c), (r + one_offset, c + 1), self.board))
+                        if self.board[r + one_offset][c + 1] != "--":
+                            self.whiteProtectsFrom.append(Move((r, c), (r + one_offset, c + 1), self.board))
                     else:
                         self.potential_black_pawn_check.append((r + one_offset, c + 1))
-                        self.blackProtectsFrom.append(Move((r, c), (r + one_offset, c + 1), self.board))
+                        if self.board[r + one_offset][c + 1] != "--":
+                            self.blackProtectsFrom.append(Move((r, c), (r + one_offset, c + 1), self.board))
                 if r + one_offset == self.enPassantLocation[0] and c + 1 == self.enPassantLocation[1]:
                     moves.append(Move((r, c), (r + one_offset, c + 1), self.board, False, True))
 
@@ -553,7 +571,7 @@ class GameState:
                     if self.board[r][i][1] == "K":
                         self.king_check = True
                         made_check = True
-                        if i - 1 > 0:
+                        if i - 1 >= 0:
                             self.check_through_king.append((r, i - 1))
                         break
                     pinning = True
@@ -706,8 +724,6 @@ class GameState:
                 moves.append(Move((r, c), (i, new_c), self.board))
             elif self.board[i][new_c][0] == enemy:
                 moves.append(Move((r, c), (i, new_c), self.board))
-                if self.board[i][new_c][1] == "K":
-                    self.king_check = True
             else:
                 if self.whiteToMove:
                     self.whiteProtects.append((i, new_c))
@@ -726,8 +742,6 @@ class GameState:
                 moves.append(Move((r, c), (i, new_c), self.board))
             elif self.board[i][new_c][0] == enemy:
                 moves.append(Move((r, c), (i, new_c), self.board))
-                if self.board[i][new_c][1] == "K":
-                    self.king_check = True
             else:
                 if self.whiteToMove:
                     self.whiteProtects.append((i, new_c))
@@ -746,8 +760,6 @@ class GameState:
                 moves.append(Move((r, c), (new_r, i), self.board))
             elif self.board[new_r][i][0] == enemy:
                 moves.append(Move((r, c), (new_r, i), self.board))
-                if self.board[new_r][i][1] == "K":
-                    self.king_check = True
             else:
                 if self.whiteToMove:
                     self.whiteProtects.append((new_r, i))
@@ -766,8 +778,6 @@ class GameState:
                 moves.append(Move((r, c), (new_r, i), self.board))
             elif self.board[new_r][i][0] == enemy:
                 moves.append(Move((r, c), (new_r, i), self.board))
-                if self.board[new_r][i][1] == "K":
-                    self.king_check = True
             else:
                 if self.whiteToMove:
                     self.whiteProtects.append((new_r, i))
