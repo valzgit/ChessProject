@@ -42,7 +42,7 @@ class GameState:
         self.blackRooksMoved = [False, False]
 
         self.king_check = False
-        self.values = {"P": 1, "R": 5, "N": 3, "B": 3, "Q": 9, "K": 100}  # optimizovati vrednost kralja
+        self.values = {"P": 1, "R": 5, "N": 3, "B": 3, "Q": 9, "K": 6}  # optimizovati vrednost kralja
         self.whiteToMove = True
         self.moveLog = []
 
@@ -259,12 +259,13 @@ class GameState:
         i = 0
         if not self.whiteToMove:
             while i < len(self.potential_white_pawn_check):
-                if self.potential_white_pawn_check.__getitem__(i) in next_to_king:
+                pawn_move = self.potential_white_pawn_check.__getitem__(i)
+                if pawn_move in next_to_king:
                     index = 0
                     while index < len(king_play_indexes):
                         where = king_play_indexes.__getitem__(index)
                         king_move = moves.__getitem__(where)
-                        if (king_move.end_row, king_move.end_column) == self.potential_white_pawn_check.__getitem__(i):
+                        if (king_move.end_row, king_move.end_column) == pawn_move: #self.potential_white_pawn_check.__getitem__(i)
                             moves.__delitem__(where)
                             king_play_indexes.__delitem__(index)
                             pom_brojac = index
@@ -273,15 +274,20 @@ class GameState:
                                 pom_brojac = pom_brojac + 1
                             continue
                         index = index + 1
+                if self.rokadaPossible[0] and pawn_move[0] == 0 and 2 <= pawn_move[1] < 4:
+                    self.rokadaPossible[0] = False
+                if self.rokadaPossible[1] and pawn_move[0] == 0 and 5 <= pawn_move[1] < 7:
+                    self.rokadaPossible[1] = False
                 i = i + 1
         else:
             while i < len(self.potential_black_pawn_check):
-                if self.potential_black_pawn_check.__getitem__(i) in next_to_king:
+                pawn_move = self.potential_black_pawn_check.__getitem__(i)
+                if pawn_move in next_to_king:
                     index = 0
                     while index < len(king_play_indexes):
                         where = king_play_indexes.__getitem__(index)
                         king_move = moves.__getitem__(where)
-                        if (king_move.end_row, king_move.end_column) == self.potential_black_pawn_check.__getitem__(i):
+                        if (king_move.end_row, king_move.end_column) == pawn_move: #self.potential_black_pawn_check.__getitem__(i)
                             moves.__delitem__(where)
                             king_play_indexes.__delitem__(index)
                             pom_brojac = index
@@ -290,6 +296,10 @@ class GameState:
                                 pom_brojac = pom_brojac + 1
                             continue
                         index = index + 1
+                if self.rokadaPossible[2] and pawn_move[0] == 7 and 2 <= pawn_move[1] < 4:
+                    self.rokadaPossible[2] = False
+                if self.rokadaPossible[3] and pawn_move[0] == 7 and 5 <= pawn_move[1] < 7:
+                    self.rokadaPossible[3] = False
                 i = i + 1
 
         # na osnovu vrste saha odredjujem koje figure smeju da se pomeraju
