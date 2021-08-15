@@ -165,7 +165,7 @@ class SagaBot:
                             elif not whiteToMove and move.end_row < alternative.end_row:
                                 move = alternative
                     counter += 1
-            else:  # ovaj deo ispod je apsolutno stimovanje igranja i nema veliku logicku vrednost
+            elif self.gameState.num_of_played_moves < 20:  # ovaj deo ispod je apsolutno stimovanje igranja i nema veliku logicku vrednost
                 if move.piece_moved[1] != "P":
                     while counter < len(best_move):
                         alternative = best_move.__getitem__(counter)
@@ -244,10 +244,6 @@ class SagaBot:
             if (j != i and skip_iteration) or not skip_iteration:
                 while_move = moves.__getitem__(j)
 
-                if (while_move.start_row, while_move.start_column) in blocked_positions:
-                    j += 1
-                    continue
-
                 me = self.gameState.board[while_move.start_row][while_move.start_column]
                 if me[1] != "P":  # svako ko nije piun sme da jede tamo gde se krece
                     if (move.end_row == while_move.end_row) and (move.end_column == while_move.end_column):
@@ -255,89 +251,72 @@ class SagaBot:
                         # print(str(while_move.start_row) + " " + str(while_move.start_column) + " to " + str(
                         #     while_move.end_row) + " " + str(while_move.end_column))
                 else:  # samo piun jede dijagonalno a krece se pravo
-                    blocked_positions.append((while_move.start_row, while_move.start_column))
-                    if me[0] == "w":
-                        if (while_move.start_row - 1 >= 0) and (while_move.start_row - 1 == move.end_row):
-                            if (while_move.start_column - 1 >= 0) and (while_move.start_column - 1 == move.end_column):
-                                selected_moves.append(
-                                    ce.Move((while_move.start_row, while_move.start_column),
-                                            (while_move.start_row - 1, while_move.start_column - 1),
-                                            self.gameState.board))
-                                # print("1. " + str(while_move.start_row) + " " + str(
-                                #     while_move.start_column) + " to " + str(
-                                #     while_move.start_row - 1) + " " + str(while_move.start_column - 1))
-                            if (while_move.start_column + 1 <= 7) and (while_move.start_column + 1 == move.end_column):
-                                selected_moves.append(
-                                    ce.Move((while_move.start_row, while_move.start_column),
-                                            (while_move.start_row - 1, while_move.start_column + 1),
-                                            self.gameState.board))
-                                # print("2. " + str(while_move.start_row) + " " + str(
-                                #     while_move.start_column) + " to " + str(
-                                #     while_move.start_row - 1) + " " + str(while_move.start_column + 1))
+                    if while_move.start_column == while_move.end_column: #ako vec imam poteze jedenja njih gledam normalno
+                        if (while_move.start_row, while_move.start_column) in blocked_positions:
+                            j += 1
+                            continue
+                        blocked_positions.append((while_move.start_row, while_move.start_column))
+                        if me[0] == "w":
+                            if (while_move.start_row - 1 >= 0) and (while_move.start_row - 1 == move.end_row):
+                                if (while_move.start_column - 1 >= 0) and (while_move.start_column - 1 == move.end_column):
+                                    if self.gameState.board[while_move.start_row-1][while_move.start_column-1] == "--":
+                                        selected_moves.append(
+                                            ce.Move((while_move.start_row, while_move.start_column),
+                                                    (while_move.start_row - 1, while_move.start_column - 1),
+                                                    self.gameState.board))
+                                    # print("1. " + str(while_move.start_row) + " " + str(
+                                    #     while_move.start_column) + " to " + str(
+                                    #     while_move.start_row - 1) + " " + str(while_move.start_column - 1))
+                                if (while_move.start_column + 1 <= 7) and (while_move.start_column + 1 == move.end_column):
+                                    if self.gameState.board[while_move.start_row - 1][while_move.start_column + 1] == "--":
+                                        selected_moves.append(
+                                            ce.Move((while_move.start_row, while_move.start_column),
+                                                    (while_move.start_row - 1, while_move.start_column + 1),
+                                                    self.gameState.board))
+                                    # print("2. " + str(while_move.start_row) + " " + str(
+                                    #     while_move.start_column) + " to " + str(
+                                    #     while_move.start_row - 1) + " " + str(while_move.start_column + 1))
+                        else:
+                            if (while_move.start_row + 1 <= 7) and (while_move.start_row + 1 == move.end_row):
+                                if (while_move.start_column - 1 >= 0) and (while_move.start_column - 1 == move.end_column):
+                                    if self.gameState.board[while_move.start_row + 1][while_move.start_column - 1] == "--":
+                                        selected_moves.append(
+                                            ce.Move((while_move.start_row, while_move.start_column),
+                                                    (while_move.start_row + 1, while_move.start_column - 1),
+                                                    self.gameState.board))
+                                    # print("3. " + str(while_move.start_row) + " " + str(
+                                    #     while_move.start_column) + " to " + str(
+                                    #     while_move.start_row + 1) + " " + str(while_move.start_column - 1))
+                                if (while_move.start_column + 1 <= 7) and (while_move.start_column + 1 == move.end_column):
+                                    if self.gameState.board[while_move.start_row + 1][while_move.start_column + 1] == "--":
+                                        selected_moves.append(
+                                            ce.Move((while_move.start_row, while_move.start_column),
+                                                    (while_move.start_row + 1, while_move.start_column + 1),
+                                                    self.gameState.board))
+                                    # print("4. " + str(while_move.start_row) + " " + str(
+                                    #     while_move.start_column) + " to " + str(
+                                    #     while_move.start_row + 1) + " " + str(while_move.start_column + 1))
                     else:
-                        if (while_move.start_row + 1 <= 7) and (while_move.start_row + 1 == move.end_row):
-                            if (while_move.start_column - 1 >= 0) and (while_move.start_column - 1 == move.end_column):
-                                selected_moves.append(
-                                    ce.Move((while_move.start_row, while_move.start_column),
-                                            (while_move.start_row + 1, while_move.start_column - 1),
-                                            self.gameState.board))
-                                # print("3. " + str(while_move.start_row) + " " + str(
-                                #     while_move.start_column) + " to " + str(
-                                #     while_move.start_row + 1) + " " + str(while_move.start_column - 1))
-                            if (while_move.start_column + 1 <= 7) and (while_move.start_column + 1 == move.end_column):
-                                selected_moves.append(
-                                    ce.Move((while_move.start_row, while_move.start_column),
-                                            (while_move.start_row + 1, while_move.start_column + 1),
-                                            self.gameState.board))
-                                # print("4. " + str(while_move.start_row) + " " + str(
-                                #     while_move.start_column) + " to " + str(
-                                #     while_move.start_row + 1) + " " + str(while_move.start_column + 1))
+                        if (move.end_row == while_move.end_row) and (move.end_column == while_move.end_column):
+                            selected_moves.append(while_move)
             j += 1
         # print("-------------------------------------------")
 
     def dangerousPosition(self, valid_moves, i, move, selected_valid_moves, skip_iteration):
         j = 0
-        blocked_positions = []  # branim da se pijun dva puta gleda (posto moze na 2 pozicije da ode prvi potez)
         while j < len(valid_moves):
             if (j != i and skip_iteration) or not skip_iteration:
                 while_move = valid_moves.__getitem__(j)
-                if (while_move.start_row, while_move.start_column) in blocked_positions:
-                    j += 1
-                    continue
                 me = self.gameState.board[while_move.start_row][while_move.start_column]
                 if me[1] != "P":  # svako ko nije piun sme da jede tamo gde se krece
                     if move.end_row == while_move.end_row and move.end_column == while_move.end_column:
                         selected_valid_moves.append(while_move)
                         return
                 else:  # samo piun jede dijagonalno a krece se pravo
-                    blocked_positions.append((while_move.start_row, while_move.start_column))
-                    if me[0] == "w":
-                        if while_move.start_row - 1 >= 0 and while_move.start_row - 1 == move.end_row:
-                            if while_move.start_column - 1 >= 0 and while_move.start_column - 1 == move.end_column:
-                                selected_valid_moves.append(
-                                    ce.Move((while_move.start_row, while_move.start_column),
-                                            (while_move.start_row - 1, while_move.start_column - 1),
-                                            self.gameState.board))
-                                return
-                            if while_move.start_column + 1 <= 7 and while_move.start_column + 1 == move.end_column:
-                                selected_valid_moves.append(
-                                    ce.Move((while_move.start_row, while_move.start_column),
-                                            (while_move.start_row - 1, while_move.start_column + 1),
-                                            self.gameState.board))
-                                return
-                    else:
-                        if while_move.start_row + 1 <= 7 and while_move.start_row + 1 == move.end_row:
-                            if while_move.start_column - 1 >= 0 and while_move.start_column - 1 == move.end_column:
-                                selected_valid_moves.append(
-                                    ce.Move((while_move.start_row, while_move.start_column),
-                                            (while_move.start_row + 1, while_move.start_column - 1),
-                                            self.gameState.board))
-                                return
-                            if while_move.start_column + 1 <= 7 and while_move.start_column + 1 == move.end_column:
-                                selected_valid_moves.append(
-                                    ce.Move((while_move.start_row, while_move.start_column),
-                                            (while_move.start_row + 1, while_move.start_column + 1),
-                                            self.gameState.board))
+                    if while_move.start_column != while_move.end_column:  # ako vec imam poteze jedenja njih gledam normalno
+                        if (move.end_row == while_move.end_row) and (move.end_column == while_move.end_column):
+                            selected_valid_moves.append(while_move)
+                            return
             j += 1
 
     def sortByVal(self, move):

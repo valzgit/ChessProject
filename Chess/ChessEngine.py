@@ -16,6 +16,7 @@ class GameState:
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"],
         ]
 
+        self.num_of_played_moves = 0
         self.pinned = []  # pozicije na kojima se nalaze figure koje su na putu izmedju figure koja jede i kralja
         self.allowed_pinned = []  # slucajevi ukoliko 'pinovane' figure mogu da pojedu figuru koja preti
         self.moveFunctions = {"P": self.getPawnMoves, "R": self.getRookMoves, "N": self.getKnightMoves,
@@ -125,6 +126,7 @@ class GameState:
 
         self.moveLog.append(move)  # sacuvamo potez
         self.whiteToMove = not self.whiteToMove
+        self.num_of_played_moves += 1
 
     def undoMove(self): #radi ali onako, test svrhe iskljucivo
         if len(self.moveLog) != 0:
@@ -136,6 +138,7 @@ class GameState:
                 self.white_king = (move.start_row, move.start_column)
             elif (move.end_row, move.end_column) == self.black_king:
                 self.black_king = (move.start_row, move.start_column)
+            self.num_of_played_moves -= 1
 
     def getValidMoves(self):
         moves = []
@@ -468,6 +471,8 @@ class GameState:
                 break
             elif pinning and self.board[i][c][0] != enemy and self.board[i][c] != "--":
                 break
+            elif pinning and self.board[i][c] == "--":
+                check_road.append((i, c))
 
         if made_check:
             for elem in check_road:
@@ -513,6 +518,8 @@ class GameState:
                 break
             elif pinning and self.board[i][c][0] != enemy and self.board[i][c] != "--":
                 break
+            elif pinning and self.board[i][c] == "--":
+                check_road.append((i, c))
 
         if made_check:
             for elem in check_road:
@@ -558,6 +565,8 @@ class GameState:
                 break
             elif pinning and self.board[r][i][0] != enemy and self.board[r][i] != "--":
                 break
+            elif pinning and self.board[i][c] == "--":
+                check_road.append((r, i))
 
         if made_check:
             for elem in check_road:
@@ -604,6 +613,8 @@ class GameState:
                 break
             elif pinning and self.board[r][i][0] != enemy and self.board[r][i] != "--":
                 break
+            elif pinning and self.board[i][c] == "--":
+                check_road.append((r, i))
 
         if made_check:
             for elem in check_road:
@@ -848,6 +859,8 @@ class GameState:
                 break
             elif pinning and self.board[i][new_c][0] != enemy and self.board[i][new_c] != "--":
                 break
+            elif pinning and self.board[i][new_c] == "--":
+                check_road.append((i, new_c))
 
         if made_check:
             for elem in check_road:
@@ -897,6 +910,8 @@ class GameState:
                 break
             elif pinning and self.board[i][new_c][0] != enemy and self.board[i][new_c] != "--":
                 break
+            elif pinning and self.board[i][new_c] == "--":
+                check_road.append((i, new_c))
 
         if made_check:
             for elem in check_road:
@@ -946,6 +961,8 @@ class GameState:
                 break
             elif pinning and self.board[new_r][i][0] != enemy and self.board[new_r][i] != "--":
                 break
+            elif pinning and self.board[new_r][i] == "--":
+                check_road.append((new_r, i))
 
         if made_check:
             for elem in check_road:
@@ -995,6 +1012,8 @@ class GameState:
                 break
             elif pinning and self.board[new_r][i][0] != enemy and self.board[new_r][i] != "--":
                 break
+            elif pinning and self.board[new_r][i] == "--":
+                check_road.append((new_r, i))
 
         if made_check:
             for elem in check_road:

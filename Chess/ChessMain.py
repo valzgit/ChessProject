@@ -10,8 +10,9 @@ SQ_SIZE = HEIGHT // DIMENSION
 MAX_FPS = 15
 IMAGES = {}
 
-# arduinoData = serial.Serial('COM3', 9600)
-# arduinoData.timeout = 1
+
+#arduinoData = serial.Serial('COM3', 9600)
+#arduinoData.timeout = 1
 
 def loadImages():
     pieces = ["wP", "wR", "wK", "wB", "wN", "wQ", "bP", "bR", "bK", "bB", "bN", "bQ"]
@@ -38,7 +39,31 @@ def main():
     playerClicks = []
     gamemode = 1
     move_start_end_pos = []
+    start_time = p.time.get_ticks()
+    print(start_time)
+    white_play_time = 0
+    black_play_time = 0
+    time_limit = 30 * 60 * 1000 # 30 minuta puta 60 sekundi puta 1000 milisekundi
     while running:
+        if gs.num_of_played_moves == 0:
+            start_time = p.time.get_ticks()
+        if gs.whiteToMove and gs.num_of_played_moves > 0 and not SAH_MAT:
+            play_time = p.time.get_ticks() - start_time
+            white_play_time += play_time
+            start_time = p.time.get_ticks()
+            print(str(gs.num_of_played_moves) + " WHITE TIME IS " + str(play_time/1000) + " SECONDS AND LIMIT IS " + str(time_limit/1000))
+            if white_play_time > time_limit:
+                running = False
+                print("BLACK WON (TIMES UP FOR WHITE)")
+        if not gs.whiteToMove and gs.num_of_played_moves > 0 and not SAH_MAT:
+            play_time = p.time.get_ticks() - start_time
+            black_play_time += play_time
+            start_time = p.time.get_ticks()
+            print(str(gs.num_of_played_moves) + " BLACK TIME IS " + str(play_time/1000) + " SECONDS AND LIMIT IS " + str(time_limit/1000))
+            if black_play_time > time_limit:
+                running = False
+                print("WHITE WON (TIMES UP FOR BLACK)")
+
         for e in p.event.get():
             if e.type == p.QUIT:
                 running = False
@@ -77,8 +102,8 @@ def main():
                         print(move.getChessNotation())
                         move_start_end_pos = [(move.start_row, move.start_column), (move.end_row, move.end_column)]
                         gs.makeMove(move)
-                        # value = move.start_row * 1000 + move.start_column * 100 + move.end_row * 10 + move.end_column
-                        # arduinoData.write(str(value).encode())
+                        value = move.start_row * 1000 + move.start_column * 100 + move.end_row * 10 + move.end_column
+                        #arduinoData.write(str(value).encode())
                         move_made = True
                     playerClicks = []
                     square_selected = ()
@@ -92,16 +117,38 @@ def main():
                 elif e.key == p.K_ESCAPE:
                     running = False
                 elif e.key == p.K_1:
-                    gamemode = 1 # covek vs covek
+                    gamemode = 1  # covek vs covek
+                    print("MAN VS MAN")
                 elif e.key == p.K_2:
-                    gamemode = 2 # covek vs bot
+                    gamemode = 2  # covek vs bot
+                    print("MAN VS BOT")
                 elif e.key == p.K_3:
-                    gamemode = 3 # bot(random) vs bot (razvijeni)
+                    gamemode = 3  # bot(random) vs bot (razvijeni)
+                    print("BOT VS WEAKER BOT")
                 elif e.key == p.K_4:
-                    gamemode = 4 # bot (razvijeni) vs bot (razvijeni)
+                    gamemode = 4  # bot (razvijeni) vs bot (razvijeni)
+                    print("BOT VS BOT")
+                elif e.key == p.K_7:
+                    time_limit = 30 * 60 * 1000 # 30 minuta puta 60 sekundi puta 1000 milisekundi CLASSICAL
+                    print("CLASSICAL (30 MIN)")
+                elif e.key == p.K_8:
+                    time_limit = 10 * 60 * 1000 # 10 minuta puta 60 sekundi puta 1000 milisekundi RAPID
+                    print("RAPID (10 MIN)")
+                elif e.key == p.K_9:
+                    time_limit = 5 * 60 * 1000 # 5 minuta puta 60 sekundi puta 1000 milisekundi BLITZ
+                    print("BLITZ (5 MIN)")
+                elif e.key == p.K_0:
+                    time_limit = 1 * 60 * 1000 # 1 minut puta 60 sekundi puta 1000 milisekundi BULLET
+                    print("BULLET (1 MIN)")
+                elif e.key == p.K_h:
+                    move = bot1.calculateMoves(valid_moves, valid_enemy_moves, white_protect_list, black_protect_list,
+                                               gs.whiteToMove)
+                    value = 10000 + move.start_row * 1000 + move.start_column * 100 + move.end_row * 10 + move.end_column
+                    #arduinoData.write(str(value).encode())
+                    print("HELP FROM BOT")
 
         if move_made:
-            valid_moves, valid_enemy_moves,white_protect_list, black_protect_list = gs.getValidMoves()
+            valid_moves, valid_enemy_moves, white_protect_list, black_protect_list = gs.getValidMoves()
 
             # u ovom delu se obradjuje pat , sah mat i pitanje korisnika da li zeli da igra novu igru
             if len(valid_moves) == 0 and gs.king_check:
@@ -124,23 +171,22 @@ def main():
         # BOT PLAYING HERE
         if not gs.whiteToMove and not SAH_MAT:
             if gamemode >= 2:
-                move = bot1.calculateMoves(valid_moves, valid_enemy_moves, white_protect_list, black_protect_list, gs.whiteToMove)
+                move = bot1.calculateMoves(valid_moves, valid_enemy_moves, white_protect_list, black_protect_list,
+                                           gs.whiteToMove)
                 move_start_end_pos = [(move.start_row, move.start_column), (move.end_row, move.end_column)]
                 gs.makeMove(move)
-            # value = move.start_row * 1000 + move.start_column * 100 + move.end_row * 10 + move.end_column
-            # arduinoData.write(str(value).encode())
                 move_made = True
         elif gs.whiteToMove and not SAH_MAT:
-            if gamemode == 3: #random bot
+            if gamemode == 3:  # random bot
                 move = valid_moves.__getitem__(r.randrange(0, len(valid_moves), 1))
                 move_start_end_pos = [(move.start_row, move.start_column), (move.end_row, move.end_column)]
                 gs.makeMove(move)
                 move_made = True
             elif gamemode == 4:
-                move = bot2.calculateMoves(valid_moves, valid_enemy_moves,white_protect_list, black_protect_list,gs.whiteToMove)
+                move = bot2.calculateMoves(valid_moves, valid_enemy_moves, white_protect_list, black_protect_list,
+                                           gs.whiteToMove)
                 move_start_end_pos = [(move.start_row, move.start_column), (move.end_row, move.end_column)]
                 gs.makeMove(move)
-                # arduinoData.write(move.start_row * 1000 + move.start_column * 100 + move.end_row * 10 + move.end_column)
                 move_made = True
 
 
@@ -180,6 +226,7 @@ def drawPieces(screen, board):
             piece = board[r][c]
             if piece != "--":
                 screen.blit(IMAGES[piece], p.Rect(c * SQ_SIZE, r * SQ_SIZE, SQ_SIZE, SQ_SIZE))
+
 
 def drawGameState(screen, gs, possible_moves, king_position, move_start_end_pos):
     drawBoard(screen, move_start_end_pos)  # nacrtaj kvadratice
