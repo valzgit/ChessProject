@@ -69,8 +69,21 @@ class SagaBot:
                                                                          (move.start_row, move.start_column),
                                                                          self.gameState.board), dangerousList, False)
                     if len(dangerousList) > 0:
-                        in_danger_list.append((move.start_row, move.start_column))
-                        addValue = self.gameState.values[me[1]]
+                        pawn_protect_list = []
+                        if self.gameState.board[move.start_row][move.start_column] == "P":  # ukoliko neko stiti piuna, ne zelimo da bezimo sa piunom
+                            if self.whiteToMove:
+                                self.expandMeList(white_protect_list, pawn_protect_list, -1, False,
+                                                  ce.Move((move.start_row, move.start_column),
+                                                          (move.start_row, move.start_column),
+                                                          self.gameState.board))
+                            else:
+                                self.expandMeList(black_protect_list, pawn_protect_list, -1, False,
+                                                  ce.Move((move.start_row, move.start_column),
+                                                          (move.start_row, move.start_column),
+                                                          self.gameState.board))
+                        if len(pawn_protect_list) == 0:
+                            in_danger_list.append((move.start_row, move.start_column))
+                            addValue = self.gameState.values[me[1]]
                 else:
                     addValue = self.gameState.values[me[1]]
                 # print(addValue)
@@ -119,8 +132,21 @@ class SagaBot:
                                                    (move.start_row, move.start_column),
                                                    self.gameState.board), dangerousList, False)
                     if len(dangerousList) > 0:
-                        in_danger_list.append((move.start_row, move.start_column))
-                        addValue = self.gameState.values[me[1]]
+                        pawn_protect_list = []
+                        if self.gameState.board[move.start_row][move.start_column][1] == "P":  # ukoliko neko stiti piuna, ne zelimo da bezimo sa piunom
+                            if self.whiteToMove:
+                                self.expandMeList(white_protect_list, pawn_protect_list, -1, False,
+                                                  ce.Move((move.start_row, move.start_column),
+                                                          (move.start_row, move.start_column),
+                                                          self.gameState.board))
+                            else:
+                                self.expandMeList(black_protect_list, pawn_protect_list, -1, False,
+                                                  ce.Move((move.start_row, move.start_column),
+                                                          (move.start_row, move.start_column),
+                                                          self.gameState.board))
+                        if len(pawn_protect_list) == 0:
+                            in_danger_list.append((move.start_row, move.start_column))
+                            addValue = self.gameState.values[me[1]]
                 else:
                     addValue = self.gameState.values[me[1]]
                 # print(addValue)
@@ -251,15 +277,17 @@ class SagaBot:
                         # print(str(while_move.start_row) + " " + str(while_move.start_column) + " to " + str(
                         #     while_move.end_row) + " " + str(while_move.end_column))
                 else:  # samo piun jede dijagonalno a krece se pravo
-                    if while_move.start_column == while_move.end_column: #ako vec imam poteze jedenja njih gledam normalno
+                    if while_move.start_column == while_move.end_column:  # ako vec imam poteze jedenja njih gledam normalno
                         if (while_move.start_row, while_move.start_column) in blocked_positions:
                             j += 1
                             continue
                         blocked_positions.append((while_move.start_row, while_move.start_column))
                         if me[0] == "w":
                             if (while_move.start_row - 1 >= 0) and (while_move.start_row - 1 == move.end_row):
-                                if (while_move.start_column - 1 >= 0) and (while_move.start_column - 1 == move.end_column):
-                                    if self.gameState.board[while_move.start_row-1][while_move.start_column-1] == "--":
+                                if (while_move.start_column - 1 >= 0) and (
+                                        while_move.start_column - 1 == move.end_column):
+                                    if self.gameState.board[while_move.start_row - 1][
+                                        while_move.start_column - 1] == "--":
                                         selected_moves.append(
                                             ce.Move((while_move.start_row, while_move.start_column),
                                                     (while_move.start_row - 1, while_move.start_column - 1),
@@ -267,8 +295,10 @@ class SagaBot:
                                     # print("1. " + str(while_move.start_row) + " " + str(
                                     #     while_move.start_column) + " to " + str(
                                     #     while_move.start_row - 1) + " " + str(while_move.start_column - 1))
-                                if (while_move.start_column + 1 <= 7) and (while_move.start_column + 1 == move.end_column):
-                                    if self.gameState.board[while_move.start_row - 1][while_move.start_column + 1] == "--":
+                                if (while_move.start_column + 1 <= 7) and (
+                                        while_move.start_column + 1 == move.end_column):
+                                    if self.gameState.board[while_move.start_row - 1][
+                                        while_move.start_column + 1] == "--":
                                         selected_moves.append(
                                             ce.Move((while_move.start_row, while_move.start_column),
                                                     (while_move.start_row - 1, while_move.start_column + 1),
@@ -278,8 +308,10 @@ class SagaBot:
                                     #     while_move.start_row - 1) + " " + str(while_move.start_column + 1))
                         else:
                             if (while_move.start_row + 1 <= 7) and (while_move.start_row + 1 == move.end_row):
-                                if (while_move.start_column - 1 >= 0) and (while_move.start_column - 1 == move.end_column):
-                                    if self.gameState.board[while_move.start_row + 1][while_move.start_column - 1] == "--":
+                                if (while_move.start_column - 1 >= 0) and (
+                                        while_move.start_column - 1 == move.end_column):
+                                    if self.gameState.board[while_move.start_row + 1][
+                                        while_move.start_column - 1] == "--":
                                         selected_moves.append(
                                             ce.Move((while_move.start_row, while_move.start_column),
                                                     (while_move.start_row + 1, while_move.start_column - 1),
@@ -287,8 +319,10 @@ class SagaBot:
                                     # print("3. " + str(while_move.start_row) + " " + str(
                                     #     while_move.start_column) + " to " + str(
                                     #     while_move.start_row + 1) + " " + str(while_move.start_column - 1))
-                                if (while_move.start_column + 1 <= 7) and (while_move.start_column + 1 == move.end_column):
-                                    if self.gameState.board[while_move.start_row + 1][while_move.start_column + 1] == "--":
+                                if (while_move.start_column + 1 <= 7) and (
+                                        while_move.start_column + 1 == move.end_column):
+                                    if self.gameState.board[while_move.start_row + 1][
+                                        while_move.start_column + 1] == "--":
                                         selected_moves.append(
                                             ce.Move((while_move.start_row, while_move.start_column),
                                                     (while_move.start_row + 1, while_move.start_column + 1),

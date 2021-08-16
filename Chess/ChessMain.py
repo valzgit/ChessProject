@@ -51,7 +51,7 @@ def main():
             play_time = p.time.get_ticks() - start_time
             white_play_time += play_time
             start_time = p.time.get_ticks()
-            print(str(gs.num_of_played_moves) + " WHITE TIME IS " + str(play_time/1000) + " SECONDS AND LIMIT IS " + str(time_limit/1000))
+            #print(str(gs.num_of_played_moves) + " WHITE TIME IS " + str(play_time/1000) + " SECONDS AND LIMIT IS " + str(time_limit/1000))
             if white_play_time > time_limit:
                 running = False
                 print("BLACK WON (TIMES UP FOR WHITE)")
@@ -59,7 +59,7 @@ def main():
             play_time = p.time.get_ticks() - start_time
             black_play_time += play_time
             start_time = p.time.get_ticks()
-            print(str(gs.num_of_played_moves) + " BLACK TIME IS " + str(play_time/1000) + " SECONDS AND LIMIT IS " + str(time_limit/1000))
+            #print(str(gs.num_of_played_moves) + " BLACK TIME IS " + str(play_time/1000) + " SECONDS AND LIMIT IS " + str(time_limit/1000))
             if black_play_time > time_limit:
                 running = False
                 print("WHITE WON (TIMES UP FOR BLACK)")
