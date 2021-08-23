@@ -11,8 +11,8 @@ MAX_FPS = 15
 IMAGES = {}
 
 
-#arduinoData = serial.Serial('COM3', 9600)
-#arduinoData.timeout = 1
+arduinoData = serial.Serial('COM3', 9600)
+arduinoData.timeout = 1
 
 def loadImages():
     pieces = ["wP", "wR", "wK", "wB", "wN", "wQ", "bP", "bR", "bK", "bB", "bN", "bQ"]
@@ -21,6 +21,7 @@ def loadImages():
 
 
 def main():
+    arduino_useable = False
     SAH_MAT = False
     possible_moves = []
     king_position = ()
@@ -103,7 +104,8 @@ def main():
                         move_start_end_pos = [(move.start_row, move.start_column), (move.end_row, move.end_column)]
                         gs.makeMove(move)
                         value = move.start_row * 1000 + move.start_column * 100 + move.end_row * 10 + move.end_column
-                        #arduinoData.write(str(value).encode())
+                        if arduino_useable:
+                            arduinoData.write(str(value).encode())
                         move_made = True
                     playerClicks = []
                     square_selected = ()
@@ -144,8 +146,18 @@ def main():
                     move = bot1.calculateMoves(valid_moves, valid_enemy_moves, white_protect_list, black_protect_list,
                                                gs.whiteToMove)
                     value = 10000 + move.start_row * 1000 + move.start_column * 100 + move.end_row * 10 + move.end_column
-                    #arduinoData.write(str(value).encode())
-                    print("HELP FROM BOT")
+                    if arduino_useable:
+                        arduinoData.write(str(value).encode())
+                        print("HELP FROM BOT")
+                    else:
+                        print("FIRST TURN ON ARDUINO!")
+                elif e.key == p.K_a:
+                    if arduino_useable:
+                        arduino_useable = False
+                        print("ARDUINO IS NOW DISABLED")
+                    else:
+                        arduino_useable = True
+                        print("ARDUINO IS NOW READY")
 
         if move_made:
             valid_moves, valid_enemy_moves, white_protect_list, black_protect_list = gs.getValidMoves()
